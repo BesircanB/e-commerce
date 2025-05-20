@@ -1,0 +1,96 @@
+/* Genel header yapısı */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #4caf50;
+  padding: 0.8rem 2rem;
+  color: white;
+  gap: 1rem;
+}
+
+/* Sol */
+.header-left {
+  flex: 1;
+}
+
+.header-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+/* Orta: Arama alanı */
+.header-center {
+  flex: 2;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.header-center input {
+  padding: 0.4rem 0.6rem;
+  border-radius: 5px;
+  border: none;
+  min-width: 200px;
+}
+
+.header-center button {
+  background-color: white;
+  color: #4caf50;
+  border: none;
+  border-radius: 5px;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+/* Sağ */
+.header-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Ortak stil: Profil / Sepet */
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.action-item .icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.action-item .label {
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+/* Sepet sayacı */
+.cart-icon .cart-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 0.6rem;
+  padding: 2px 5px;
+  border-radius: 50%;
+}
+
+/* Çıkış butonu */
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}

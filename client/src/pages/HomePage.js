@@ -1,20 +1,17 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import Header from "../components/Header";
+import ProductList from "../components/ProductList";
 
 const HomePage = () => {
   return (
-    <div className="homepage-container">
-      <header className="homepage-header">
-        <h1>E-Ticaret Sitesi</h1>
-        <div className="auth-buttons">
-          <Link to="/login">Giriş Yap</Link>
-          <Link to="/register">Kayıt Ol</Link>
-        </div>
-      </header>
+    <div>
+      <Header />
 
       <main className="homepage-main">
-        <h2>Hoş Geldiniz 👋</h2>
-        <p>Burada ürünler, kampanyalar ve fırsatlar olacak!</p>
+        <h2 style={{ textAlign: "center", marginTop: "1rem" }}>
+          Hoş Geldiniz 👋
+        </h2>
+        <ProductList />
       </main>
     </div>
   );

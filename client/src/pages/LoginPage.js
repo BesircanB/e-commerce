@@ -1,19 +1,19 @@
 import React, { useState } from "react";
+import Modal from "../components/Modal";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    // Backend'e gönderilecek (şu an sadece console)
-    console.log("Login data:", { email, password });
-
-    // Başarılı giriş sonrası yönlendirme örneği
-    // navigate("/");
+    // ... backend ile bağlantı (önceden yazdığın gibi)
+    login({ email });
+    navigate("/");
   };
 
   const handleGoogleLogin = () => {
@@ -21,7 +21,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-container">
+    <Modal>
       <form className="login-form" onSubmit={handleLogin}>
         <h2>Giriş Yap</h2>
 
@@ -59,7 +59,7 @@ const LoginPage = () => {
           Google ile Giriş Yap
         </button>
       </form>
-    </div>
+    </Modal>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Modal from "../components/Modal";
 
 const RegisterPage = () => {
   const [email, setEmail] = useState("");
@@ -16,10 +17,21 @@ const RegisterPage = () => {
       return;
     }
 
-    // Backend'e kayıt isteği gönderilecek (şimdilik sadece simülasyon)
-    console.log("Kayıt verisi:", { name, email, password });
+    // Backend'e veri gönderme örneği
+    const response = await fetch("http://localhost:5000/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, name }),
+    });
 
-    // navigate("/login");
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("Kayıt başarılı");
+      navigate("/login");
+    } else {
+      alert(data.message || "Kayıt başarısız");
+    }
   };
 
   const handleGoogleRegister = () => {
@@ -27,7 +39,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="login-container">
+    <Modal>
       <form className="login-form" onSubmit={handleRegister}>
         <h2>Kayıt Ol</h2>
 
@@ -64,7 +76,6 @@ const RegisterPage = () => {
 
         <button type="submit">Kayıt Ol</button>
 
-        {/* 🔽 Bu kısım düz yazı + link */}
         <div className="form-note">
           <span>Zaten hesabınız var mı?</span>
           <Link to="/login">Giriş Yap</Link>
@@ -72,7 +83,11 @@ const RegisterPage = () => {
 
         <div className="divider">veya</div>
 
-        <button type="button" className="google-button" onClick={handleGoogleRegister}>
+        <button
+          type="button"
+          className="google-button"
+          onClick={handleGoogleRegister}
+        >
           <img
             src="https://www.svgrepo.com/show/475656/google-color.svg"
             alt="Google"
@@ -81,7 +96,7 @@ const RegisterPage = () => {
           Google ile Kayıt Ol
         </button>
       </form>
-    </div>
+    </Modal>
   );
 };
 

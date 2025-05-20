@@ -1,27 +1,31 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import Modal from "../components/Modal";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
 
-  const handleResetPassword = async (e) => {
+  const handleReset = async (e) => {
     e.preventDefault();
 
-    if (!email) {
-      alert("Lütfen e-posta girin.");
-      return;
+    const response = await fetch("http://localhost:5000/api/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("Şifre sıfırlama bağlantısı gönderildi.");
+    } else {
+      alert(data.message || "İşlem başarısız");
     }
-
-    // Şifre sıfırlama isteği (şu an sadece simülasyon)
-    console.log("Şifre sıfırlama isteği:", email);
-
-    // İleride backend'e POST istek gönderilecek
-    // await fetch("http://localhost:5000/api/auth/reset-password", { ... })
   };
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleResetPassword}>
+    <Modal>
+      <form className="login-form" onSubmit={handleReset}>
         <h2>Şifre Sıfırla</h2>
 
         <input
@@ -39,7 +43,7 @@ const ForgotPasswordPage = () => {
           <Link to="/register">Kayıt Ol</Link>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 };
 
