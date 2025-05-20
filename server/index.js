@@ -33,3 +33,9 @@ app.listen(PORT, () => {
   console.log(`🚀 Sunucu ${PORT} portunda çalışıyor`);
 });
 
+const productRoutes = require("./routes/products");
+app.use("/api/products", productRoutes);
+
+// index.js
+const cartRoutes = require("./routes/cart");
+app.use("/api/cart", cartRoutes);
