@@ -1,6 +1,7 @@
 import React from "react";
 import { useCart } from "../context/CartContext";
 import Header from "../components/Header";
+import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
   const {
@@ -10,6 +11,8 @@ const CartPage = () => {
     increaseQuantity,
     decreaseQuantity,
   } = useCart();
+
+  const navigate = useNavigate();
 
   const total = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -47,14 +50,16 @@ const CartPage = () => {
                     </p>
 
                     <div>
-                      <button onClick={() => decreaseQuantity(item.id)}>➖</button>
-                      <button onClick={() => increaseQuantity(item.id)}>➕</button>
+                      <button onClick={() => decreaseQuantity(item.id)}>
+                        ➖
+                      </button>
+                      <button onClick={() => increaseQuantity(item.id)}>
+                        ➕
+                      </button>
                     </div>
                   </div>
 
-                  <button onClick={() => removeFromCart(item.id)}>
-                    Kaldır
-                  </button>
+                  <button onClick={() => removeFromCart(item.id)}>Kaldır</button>
                 </li>
               ))}
             </ul>
@@ -65,6 +70,21 @@ const CartPage = () => {
 
             <button onClick={clearCart} style={{ marginTop: "1rem" }}>
               Sepeti Temizle
+            </button>
+
+            <button
+              onClick={() => navigate("/checkout")}
+              style={{
+                marginTop: "1rem",
+                backgroundColor: "#28a745",
+                color: "white",
+                padding: "0.5rem 1rem",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Siparişi Tamamla
             </button>
           </>
         )}
