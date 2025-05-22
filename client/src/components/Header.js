@@ -30,7 +30,7 @@ const Header = () => {
         <button>🔍</button>
       </div>
 
-      {/* Sağ: Profil ve Sepet */}
+      {/* Sağ: Profil, Favoriler ve Sepet */}
       <div className="header-right">
         {user ? (
           <>
@@ -38,6 +38,13 @@ const Header = () => {
               <span className="icon">👤</span>
               <span className="label">Profil</span>
             </Link>
+
+            {/* ✅ Favorilerim bağlantısı */}
+            <Link to="/wishlist" className="action-item">
+              <span className="icon">💖</span>
+              <span className="label">Favorilerim</span>
+            </Link>
+
             <button onClick={logout} className="action-item logout-btn">
               <span className="icon">🚪</span>
               <span className="label">Çıkış</span>
