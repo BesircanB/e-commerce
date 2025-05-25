@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
@@ -10,14 +10,25 @@ const CartPage = () => {
     clearCart,
     increaseQuantity,
     decreaseQuantity,
+    applyCampaign,
+    appliedCampaign,
+    getCartTotal,
+    getDiscountedTotal,
   } = useCart();
 
   const navigate = useNavigate();
 
-  const total = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
+  const [couponCode, setCouponCode] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleApplyCoupon = () => {
+    const result = applyCampaign(couponCode);
+    if (result.success) {
+      setMessage("✅ Kupon başarıyla uygulandı.");
+    } else {
+      setMessage("❌ " + result.message);
+    }
+  };
 
   return (
     <div>
@@ -50,12 +61,8 @@ const CartPage = () => {
                     </p>
 
                     <div>
-                      <button onClick={() => decreaseQuantity(item.id)}>
-                        ➖
-                      </button>
-                      <button onClick={() => increaseQuantity(item.id)}>
-                        ➕
-                      </button>
+                      <button onClick={() => decreaseQuantity(item.id)}>➖</button>
+                      <button onClick={() => increaseQuantity(item.id)}>➕</button>
                     </div>
                   </div>
 
@@ -64,8 +71,37 @@ const CartPage = () => {
               ))}
             </ul>
 
+            {/* 🧾 Kampanya kodu giriş alanı */}
+            <div style={{ marginTop: "2rem" }}>
+              <input
+                type="text"
+                placeholder="Kupon Kodu Giriniz"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                style={{ padding: "0.5rem", marginRight: "0.5rem" }}
+              />
+              <button onClick={handleApplyCoupon}>Uygula</button>
+              {message && <p>{message}</p>}
+              {appliedCampaign && (
+                <p style={{ color: "green" }}>
+                  ✔ Uygulanan Kampanya: <strong>{appliedCampaign.code}</strong> (
+                  {appliedCampaign.type === "percentage"
+                    ? `%${appliedCampaign.amount}`
+                    : `${appliedCampaign.amount}₺ indirim`}
+                  )
+                </p>
+              )}
+            </div>
+
+            {/* 💰 Toplamlar */}
             <div style={{ marginTop: "2rem", fontWeight: "bold" }}>
-              Toplam: {total.toFixed(2)} ₺
+              <p>Ara Toplam: {getCartTotal().toFixed(2)} ₺</p>
+              {appliedCampaign && (
+                <p>İndirimli Toplam: {getDiscountedTotal().toFixed(2)} ₺</p>
+              )}
+              {!appliedCampaign && (
+                <p>Toplam: {getCartTotal().toFixed(2)} ₺</p>
+              )}
             </div>
 
             <button onClick={clearCart} style={{ marginTop: "1rem" }}>

@@ -1,15 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { campaigns } from "../models/campaigns"; // 👈 Kampanya verisi
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  // ✅ Başlangıçta localStorage'tan oku
   const [cartItems, setCartItems] = useState(() => {
     const stored = localStorage.getItem("cart");
     return stored ? JSON.parse(stored) : [];
   });
 
-  // ✅ Her değişiklikte localStorage'a yaz
+  const [appliedCampaign, setAppliedCampaign] = useState(null);
+
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
@@ -54,6 +55,44 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => {
     setCartItems([]);
+    setAppliedCampaign(null); // Sepet temizlenince kampanya da kalksın
+  };
+
+  // 🎯 Kampanya uygulama
+  const applyCampaign = (code) => {
+    const total = getCartTotal();
+    const campaign = campaigns.find(
+      (c) => c.code === code.toUpperCase()
+    );
+    if (!campaign) return { success: false, message: "Kupon kodu geçersiz" };
+
+    if (campaign.minTotal && total < campaign.minTotal) {
+      return {
+        success: false,
+        message: `Bu kampanya için minimum ${campaign.minTotal}₺ harcama gerekir.`,
+      };
+    }
+
+    setAppliedCampaign(campaign);
+    return { success: true };
+  };
+
+  const getCartTotal = () => {
+    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  };
+
+  const getDiscountedTotal = () => {
+    let total = getCartTotal();
+
+    if (appliedCampaign) {
+      if (appliedCampaign.type === "percentage") {
+        total = total * (1 - appliedCampaign.amount / 100);
+      } else if (appliedCampaign.type === "fixed") {
+        total = total - appliedCampaign.amount;
+      }
+    }
+
+    return Math.max(total, 0); // eksi olmasın
   };
 
   return (
@@ -65,6 +104,10 @@ export const CartProvider = ({ children }) => {
         clearCart,
         increaseQuantity,
         decreaseQuantity,
+        applyCampaign,
+        appliedCampaign,
+        getCartTotal,
+        getDiscountedTotal,
       }}
     >
       {children}

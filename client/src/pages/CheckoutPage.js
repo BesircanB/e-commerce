@@ -1,20 +1,41 @@
-// src/pages/CheckoutPage.js
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { useAddress } from "../context/AddressContext";
+import { useOrders } from "../context/OrderContext";
 
 const CheckoutPage = () => {
   const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
+  const { address } = useAddress();
+  const { addOrder } = useOrders();
+
+  useEffect(() => {
+    const isAddressEmpty =
+      !address.fullName ||
+      !address.street ||
+      !address.city ||
+      !address.postalCode ||
+      !address.country;
+
+    if (isAddressEmpty) {
+      alert("Lütfen önce profil sayfasından adres bilgilerinizi girin.");
+      navigate("/profile");
+    }
+  }, [address, navigate]);
 
   const [form, setForm] = useState({
-    name: "",
-    address: "",
+    name: address.fullName || "",
+    address:
+      `${address.street}, ${address.city}, ${address.postalCode}, ${address.country}`,
     phone: "",
   });
 
-  const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const total = cartItems.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,9 +50,25 @@ const CheckoutPage = () => {
       return;
     }
 
-    // ✅ Sipariş gönderme işlemi (şimdilik mock)
-    alert("Siparişiniz başarıyla alındı!");
+    if (cartItems.length === 0) {
+      alert("Sepetiniz boş. Sipariş verilemez.");
+      return;
+    }
+
+    // ✅ Siparişi oluştur ve kaydet
+    const newOrder = {
+      date: new Date().toISOString(),
+      name: form.name,
+      phone: form.phone,
+      address: form.address,
+      items: cartItems,
+      total,
+    };
+
+    addOrder(newOrder);
     clearCart();
+
+    alert("Siparişiniz başarıyla oluşturuldu!");
     navigate("/");
   };
 
@@ -44,17 +81,36 @@ const CheckoutPage = () => {
         <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
           <div>
             <label>Ad Soyad:</label>
-            <input type="text" name="name" value={form.name} onChange={handleChange} required />
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div>
             <label>Adres:</label>
-            <textarea name="address" value={form.address} onChange={handleChange} required />
+            <textarea
+              name="address"
+              value={form.address}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div>
             <label>Telefon:</label>
-            <input type="tel" name="phone" value={form.phone} onChange={handleChange} required />
+            <input
+              type="tel"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              required
+            />
           </div>
-          <button type="submit" style={{ marginTop: "1rem" }}>Siparişi Tamamla</button>
+          <button type="submit" style={{ marginTop: "1rem" }}>
+            Siparişi Tamamla
+          </button>
         </form>
 
         <div>

@@ -2,13 +2,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSearch } from "../context/SearchContext";
-import { useCart } from "../context/CartContext"; // ✅ Sepet bilgisi
+import { useCart } from "../context/CartContext";
 import "./Header.css";
 
 const Header = () => {
   const { user, logout } = useAuth();
   const { searchTerm, setSearchTerm } = useSearch();
-  const { cartItems } = useCart(); // ✅ Sepetteki ürünler
+  const { cartItems } = useCart();
+
+  const totalQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0); // ✅ DÜZELTME
 
   return (
     <header className="header">
@@ -39,7 +41,6 @@ const Header = () => {
               <span className="label">Profil</span>
             </Link>
 
-            {/* ✅ Favorilerim bağlantısı */}
             <Link to="/wishlist" className="action-item">
               <span className="icon">💖</span>
               <span className="label">Favorilerim</span>
@@ -60,7 +61,9 @@ const Header = () => {
         <Link to="/cart" className="action-item cart-icon">
           <span className="icon">🛒</span>
           <span className="label">Sepet</span>
-          <span className="cart-count">{cartItems.length}</span>
+          {totalQuantity > 0 && (
+            <span className="cart-count">{totalQuantity}</span> // ✅ doğru adet
+          )}
         </Link>
       </div>
     </header>

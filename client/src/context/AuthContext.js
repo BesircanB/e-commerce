@@ -4,8 +4,11 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [password, setPassword] = useState(() => {
+    return localStorage.getItem("password") || "123456"; // varsayılan mock şifre
+  });
 
-  // Sayfa yenilenince localStorage'dan kullanıcıyı yükle
+  // Kullanıcıyı localStorage'dan al
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -13,6 +16,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Kullanıcı giriş yapınca
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -23,12 +27,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
   };
 
+  const changePassword = (oldPass, newPass) => {
+    if (oldPass === password) {
+      setPassword(newPass);
+      localStorage.setItem("password", newPass);
+      return { success: true };
+    } else {
+      return { success: false, message: "Eski şifre yanlış" };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Kullanmak için hook
+// Hook
 export const useAuth = () => useContext(AuthContext);
