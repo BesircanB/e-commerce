@@ -1,20 +1,36 @@
+// server/middleware/verifyToken.js
+
 const jwt = require("jsonwebtoken");
 
 const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization || "";
+  // “Bearer xxx” veya direkt “xxx” ikisini de kabul edelim
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : authHeader.trim();
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Token missing" });
+  if (!token) {
+    return res.status(401).json({ error: "Token eksik veya hatalı" });
   }
 
-  const token = authHeader.split(" ")[1];
-
+  
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    // decoded içinde userId veya id hangisi varsa o değeri number olarak al
+    const rawId = decoded.userId || decoded.id;
+    const id = Number(rawId);
+    if (isNaN(id)) {
+      return res.status(401).json({ error: "Token içeriği geçersiz" });
+    }
+    req.user = {
+      id,                     // artık kesin number
+      email: decoded.email,
+      role:  decoded.role
+    };
     next();
   } catch (err) {
-    res.status(401).json({ error: "Invalid token" });
+    console.error("verifyToken hata:", err);
+    return res.status(401).json({ error: "Token doğrulanamadı veya süresi dolmuş" });
   }
 };
 
