@@ -5,10 +5,9 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [password, setPassword] = useState(() => {
-    return localStorage.getItem("password") || "123456"; // varsayılan mock şifre
+    return localStorage.getItem("password") || "123456";
   });
 
-  // Kullanıcıyı localStorage'dan al
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -16,7 +15,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Kullanıcı giriş yapınca
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -24,7 +22,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    localStorage.removeItem("user"); // ❗️Sadece user bilgisini temizle
+    // ❌ localStorage.clear() kesinlikle kullanılmamalı!
   };
 
   const changePassword = (oldPass, newPass) => {
@@ -44,5 +43,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook
+
 export const useAuth = () => useContext(AuthContext);

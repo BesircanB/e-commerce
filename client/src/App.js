@@ -12,8 +12,9 @@ import ProfilePage from "./pages/ProfilePage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
+import AdminPage from "./pages/AdminPage"; // ✅ Admin sayfası eklendi
 
-// 🆕 Modal Bileşeni
+// Modal
 import ChangePasswordModal from "./components/ChangePasswordModal";
 
 // Context Provider'lar
@@ -24,8 +25,9 @@ import { WishlistProvider } from "./context/WishlistContext";
 import { AddressProvider } from "./context/AddressContext";
 import { OrderProvider } from "./context/OrderContext";
 
-// Giriş kontrolü
+// Route kontrolleri
 import PrivateRoute from "./routes/PrivateRoute";
+import AdminRoute from "./routes/AdminRoute"; // ✅ Admin route eklendi
 
 // Stil
 import "./App.css";
@@ -80,14 +82,22 @@ function App() {
                         </PrivateRoute>
                       }
                     />
-
-                    {/* 🆕 Şifre Değiştir Modal (Popup) */}
                     <Route
                       path="/change-password"
                       element={
                         <PrivateRoute>
                           <ChangePasswordModal />
                         </PrivateRoute>
+                      }
+                    />
+
+                    {/* ✅ Admin panel route'u */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <AdminRoute>
+                          <AdminPage />
+                        </AdminRoute>
                       }
                     />
                   </Routes>

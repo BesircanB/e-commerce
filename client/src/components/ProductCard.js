@@ -1,14 +1,22 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./ProductCard.css";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleWishlistToggle = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
     } else {
@@ -18,17 +26,21 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="product-card">
-      {/* ❤️ Favori Butonu */}
-      <div
-        className="wishlist-icon"
-        onClick={handleWishlistToggle}
-        title="Favorilere ekle/kaldır"
-      >
-        {isInWishlist(product.id) ? "❤️" : "🤍"}
-      </div>
+      {/* ❤️ Favori Butonu sadece giriş yapmış user için görünür */}
+      {user && user.role !== "admin" && (
+        <div
+          className="wishlist-icon"
+          onClick={handleWishlistToggle}
+          title="Favorilere ekle/kaldır"
+        >
+          {isInWishlist(product.id) ? "❤️" : "🤍"}
+        </div>
+      )}
 
-      {/* 🛍️ Detay sayfasına yönlendirme */}
-      <Link to={`/product/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+      <Link
+        to={`/product/${product.id}`}
+        style={{ textDecoration: "none", color: "inherit" }}
+      >
         <img src={product.image} alt={product.title} />
         <h3>{product.title}</h3>
         <p>{product.price.toFixed(2)} ₺</p>

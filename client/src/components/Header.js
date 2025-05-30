@@ -10,18 +10,14 @@ const Header = () => {
   const { searchTerm, setSearchTerm } = useSearch();
   const { cartItems } = useCart();
 
-  const totalQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0); // ✅ DÜZELTME
+  const totalQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <header className="header">
-      {/* Sol: Logo */}
       <div className="header-left">
-        <Link to="/" className="header-logo">
-          E-Ticaret
-        </Link>
+        <Link to="/" className="header-logo">E-Ticaret</Link>
       </div>
 
-      {/* Orta: Arama */}
       <div className="header-center">
         <input
           type="text"
@@ -32,18 +28,22 @@ const Header = () => {
         <button>🔍</button>
       </div>
 
-      {/* Sağ: Profil, Favoriler ve Sepet */}
       <div className="header-right">
-        {user ? (
+        {user?.role === "admin" ? (
           <>
+            <Link to="/admin" className="action-item">
+              <span className="icon">🛠️</span>
+              <span className="label">Ürünler</span>
+            </Link>
+
+            <Link to="/admin/orders" className="action-item">
+              <span className="icon">📊</span>
+              <span className="label">Muhasebe</span>
+            </Link>
+
             <Link to="/profile" className="action-item">
               <span className="icon">👤</span>
               <span className="label">Profil</span>
-            </Link>
-
-            <Link to="/wishlist" className="action-item">
-              <span className="icon">💖</span>
-              <span className="label">Favorilerim</span>
             </Link>
 
             <button onClick={logout} className="action-item logout-btn">
@@ -52,19 +52,42 @@ const Header = () => {
             </button>
           </>
         ) : (
-          <Link to="/login" className="action-item">
-            <span className="icon">👤</span>
-            <span className="label">Giriş Yap</span>
-          </Link>
-        )}
+          <>
+            {user && (
+              <Link to="/profile" className="action-item">
+                <span className="icon">👤</span>
+                <span className="label">Profil</span>
+              </Link>
+            )}
 
-        <Link to="/cart" className="action-item cart-icon">
-          <span className="icon">🛒</span>
-          <span className="label">Sepet</span>
-          {totalQuantity > 0 && (
-            <span className="cart-count">{totalQuantity}</span> // ✅ doğru adet
-          )}
-        </Link>
+            {user && (
+              <Link to="/wishlist" className="action-item">
+                <span className="icon">💖</span>
+                <span className="label">Favoriler</span>
+              </Link>
+            )}
+
+            <Link to="/cart" className="action-item cart-icon">
+              <span className="icon">🛒</span>
+              <span className="label">Sepet</span>
+              {totalQuantity > 0 && (
+                <span className="cart-count">{totalQuantity}</span>
+              )}
+            </Link>
+
+            {user ? (
+              <button onClick={logout} className="action-item logout-btn">
+                <span className="icon">🚪</span>
+                <span className="label">Çıkış</span>
+              </button>
+            ) : (
+              <Link to="/login" className="action-item">
+                <span className="icon">👤</span>
+                <span className="label">Giriş Yap</span>
+              </Link>
+            )}
+          </>
+        )}
       </div>
     </header>
   );

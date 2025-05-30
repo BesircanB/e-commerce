@@ -11,9 +11,18 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    // ... backend ile bağlantı (önceden yazdığın gibi)
-    login({ email });
-    navigate("/");
+
+  // ✅ Role belirle
+  const role =
+    email === "admin@example.com" || email === "admin2@example.com"
+      ? "admin"
+      : "user";
+
+  // ✅ Role ile login yap
+  login({ email, role });
+
+  // ✅ Role'a göre yönlendirme
+  navigate(role === "admin" ? "/admin" : "/");
   };
 
   const handleGoogleLogin = () => {
