@@ -1,0 +1,116 @@
+ Şuan 2 arkadaş e ticaret sitesi yapıyoruz. Benim görevim frontend. Daha sonrasında arkadaşım backend entegrasyonunu yapacak.
+  Görevin bu projeyi daha iyi çalışan bir hale getirmek. 
+  Güncellediğin dosyanın tüm kodlarını bana yaz her zaman doğru bir şekilde. 
+  Ben de ona göre güncelliyeyim. 
+  Projeye yeni bir özellik eklenirken adım adım yapılacak ve clean code prensibi çok önemli.
+
+ 
+ 
+ 
+ E-Ticaret React Uygulaması (Frontend Only)
+Modüler ve sürdürülebilir yapıda hazırlanmış, tamamen React tabanlı bir e-ticaret frontend projesidir.
+Giriş/çıkış, ürün listeleme, ürün detay, arama, sepet yönetimi, sipariş geçmişi ve kullanıcı profili gibi temel alışveriş akışları tamamlanmıştır.
+Backend henüz entegre edilmemiştir(supabase)
+
+
+
+
+src/
+├── components/
+│   ├── admin/
+│   │   ├── ProductForm.jsx
+│   │   ├── ProductList.jsx
+│   │   └── EditProductModal.jsx
+│   ├── ProductCard.js
+│   ├── Header.js
+├── context/
+├── pages/
+│   ├── AdminPage.jsx
+│   ├── HomePage.js
+├── services/
+├── models/
+└── App.js
+👤 Kullanıcı Özellikleri
+✅ Kayıt / Giriş
+
+✅ Ürün Listeleme
+
+✅ Ürün Detayları
+
+✅ Arama / Filtreleme
+
+✅ Sepet Yönetimi
+
+✅ Favori Ürünler
+
+✅ Sipariş Oluşturma
+
+✅ Adres Kaydetme
+
+✅ Şifre Değiştirme (Modal)
+
+⚙️ Mobil Uyum (devam edecek)
+
+👮 Admin Panel Özellikleri
+✅ Giriş Kontrolü (Role Tabanlı)
+
+✅ Ürün Ekleme
+
+✅ Ürün Silme
+
+✅ Ürün Güncelleme (Modal ile)
+
+✅ Görünürlük Ayarlama (Kullanıcıya açık/kapalı)
+
+✅ Kategori Belirleme (Giyim, Ayakkabı, Elektronik)
+
+📦 Veri Yönetimi
+🔄 localStorage kullanımı:
+
+admin_products: Admin tarafından eklenen ürünleri tutar
+
+user: Oturum yönetimi için
+
+Kullanıcılar yalnızca visible: true olan ürünleri görür.
+
+Admin’in yaptığı tüm işlemler (ekleme, silme, güncelleme) anında localStorage’a yansıtılır ve kullanıcı tarafında görünür hale gelir.
+
+💡 Modern Dashboard Planı
+Proje ileride aşağıdaki modern tasarıma geçecek şekilde yapılandırılmıştır:
+
+Sidebar menülü yönetim paneli
+
+İstatistik kartları (Toplam Sipariş, Satış vs)
+
+Orders, Products, Users modülleri ayrımı
+
+Modal/Diyalog bileşenleri component bazlı ayrılmıştır
+
+🧱 Yapılan Geliştirmeler (Güncelleme Tarihi: {today})
+✅ Temel kullanıcı & admin mimarisi kuruldu
+
+✅ AdminPage üzerinden ürün ekleme/silme/güncelleme tamamlandı
+
+✅ Ürün görünürlük kontrolü eklendi (kullanıcıya açık/kapanabilir)
+
+✅ Ürün güncelleme işlemi modal ile yapıldı
+
+✅ price.toFixed() hatası çözüldü (parseFloat)
+
+✅ localStorage.clear() hataları engellendi
+
+✅ "Admin" kategorisi sistemden tamamen kaldırıldı
+
+✅ Dosya yapısı modern panele geçişe uygun olarak düzenlendi
+
+✍️ Katkıda Bulunanlar
+👨‍💻 Frontend: Sen (React + Context + Clean Code)
+
+🔗 Backend: Entegrasyon için Supabase yapısı hazırlanıyor
+
+📌 Notlar
+Proje frontend ağırlıklıdır.
+
+Supabase entegrasyonu yapılmadan önce tüm işlemler localStorage üzerinden test edilmektedir.
+
+Kod yapısı clean code ve modülerlik ilkelerine göre oluşturulmuştur.

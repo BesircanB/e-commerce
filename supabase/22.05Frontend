@@ -1,0 +1,55 @@
+ React E-Ticaret Uygulaması (Frontend)
+Bu proje, React ile geliştirilmiş modüler ve sürdürülebilir bir e-ticaret frontend uygulamasıdır.
+Kullanıcı girişi, ürün listeleme, sepet yönetimi, favoriler ve profil gibi temel alışveriş fonksiyonlarını içerir.
+
+📁 Proje Yapısı
+bash
+Kopyala
+Düzenle
+src/
+├── components/           # UI bileşenleri (Header, ProductCard, vs)
+├── context/              # Global state yönetimi (Auth, Cart, Wishlist, Address)
+├── models/               # Mock veriler (Ürünler, Siparişler)
+├── pages/                # Sayfa bileşenleri (HomePage, ProfilePage, vs)
+├── routes/               # Özel route korumaları (PrivateRoute)
+├── services/             # API entegrasyonu için alan (gelecek için)
+├── utils/                # Yardımcı fonksiyonlar
+🔍 Mevcut Özellikler
+✅ Kullanıcı Giriş / Kayıt / Şifremi Unuttum
+
+✅ Ürün Listeleme ve Detay Sayfası
+
+✅ Global Arama (SearchContext)
+
+✅ Sepet Sistemi (CartContext + localStorage)
+
+✅ Favori Ürünler (WishlistContext + UI)
+
+✅ Sipariş Geçmişi (Mock)
+
+✅ Profil Sayfası
+
+✅ Route korumaları (PrivateRoute)
+
+🚧 Yol Haritası (Frontend Odaklı - Backend Hariç)
+Adım	Açıklama	Durum
+1️⃣	Profil Sayfasına Adres Bilgisi Formu Ekle	⬜ Başlanmadı
+2️⃣	Checkout sayfasında adres bilgilerini göster	⬜ Başlanmadı
+3️⃣	Favorilerde kaldırma, boş mesaj, sepet entegrasyonu	⬜ Başlanmadı
+4️⃣	Kategori & Fiyat filtreleri	⬜ Başlanmadı
+5️⃣	UI/UX Tasarım İyileştirmeleri (component yapısı, responsive görünüm)	⬜ Başlanmadı
+6️⃣	Sepet ve Sipariş Akışı Geliştirme	⬜ Başlanmadı
+7️⃣	Kod Temizliği & Custom Hooklar	⬜ Başlanmadı
+8️⃣	Test Altyapısı Kurulumu ve Yazımı	⬜ Başlanmadı
+
+📌 Notlar
+Adres bilgileri şu an localStorage üzerinden tutulmaktadır.
+
+Proje “clean code” ve “modüler yapı” ilkelerine göre geliştirilmektedir.
+
+Backend (örneğin Supabase) ileriki aşamada entegre edilecektir.
+
+🔁 En son kalınan nokta:
+
+1. Adım: Profil Sayfasına Adres Formu Ekleme
+⏳ Yapım aşamasında. UserAddressContext tanımlandı, ProfilePage formu henüz tamamlanmadı.

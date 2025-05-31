@@ -1,0 +1,112 @@
+ 
+ Şuan 2 arkadaş e ticaret sitesi yapıyoruz. Benim görevim frontend. Daha sonrasında arkadaşım backend entegrasyonunu yapacak.
+  Görevin bu projeyi daha iyi çalışan bir hale getirmek. 
+  Güncellediğin dosyanın tüm kodlarını bana yaz her zaman doğru bir şekilde. 
+  Ben de ona göre güncelliyeyim. 
+  Projeye yeni bir özellik eklenirken adım adım yapılacak ve clean code prensibi çok önemli.
+
+ 
+ 
+ 
+ E-Ticaret React Uygulaması (Frontend Only)
+Modüler ve sürdürülebilir yapıda hazırlanmış, tamamen React tabanlı bir e-ticaret frontend projesidir.
+Giriş/çıkış, ürün listeleme, ürün detay, arama, sepet yönetimi, sipariş geçmişi ve kullanıcı profili gibi temel alışveriş akışları tamamlanmıştır.
+Backend henüz entegre edilmemiştir(supabase); tüm veri mock dosyalardan alınmaktadır.
+
+
+✅ Tamamlanan Özellikler
+🔐 Kullanıcı Kimlik Doğrulama (Auth)
+Giriş / Kayıt / Şifremi unuttum sayfaları
+
+AuthContext ile login state yönetimi
+
+localStorage ile oturum kalıcılığı
+
+Protected route (giriş yapmadan özel sayfalara erişim engellenir)
+
+🏠 Ana Sayfa / Ürün Listeleme
+mockProducts.js üzerinden ürünler listelenir
+
+Her ürün için kart yapısı (ProductCard)
+
+Anasayfa: Hoş geldiniz mesajı, ürünler
+
+🔎 Arama
+Header'da global arama alanı
+
+SearchContext ile arama terimi globalde tutulur
+
+Arama yazıldıkça filtreleme yapılır
+
+📦 Sepet Sistemi
+CartContext ile sepet durumu yönetilir
+
+Ürün ekleme, çıkarma, adet artır/azalt
+
+Toplam tutar hesaplanır
+
+localStorage ile sepet korunur
+
+🛍️ Ürün Detay Sayfası
+/product/:id rotası üzerinden açılır
+
+Ürün başlığı, açıklaması, fiyatı, görseli
+
+Sepete ekle butonu
+
+🧾 Sipariş Tamamlama
+/checkout sayfası (giriş yapmadan erişilemez)
+
+Ad, adres, telefon formu
+
+Sepet özeti ve “Siparişi Tamamla” işlemi (mock)
+
+📋 Sipariş Geçmişi
+/orders rotası (sadece giriş yapan kullanıcılar)
+
+Sahte sipariş verisi (mockOrders.js)
+
+Sipariş tarihi, ürünler ve toplamlar listelenir
+
+👤 Profil Sayfası
+/profile sayfası
+
+Kullanıcı adı ve e-posta görüntülenir
+
+“Şifre Değiştir” ve “Siparişlerim” butonları
+
+src/
+├── components/           # Header, ProductCard gibi tekrar kullanılabilir UI bileşenleri
+├── context/              # AuthContext, CartContext, SearchContext
+├── hooks/                # (İsteğe bağlı custom hook'lar için)
+├── models/               # mock veriler (mockProducts.js, mockOrders.js)
+├── pages/                # Sayfa bileşenleri: HomePage, LoginPage, etc.
+├── routes/               # ProtectedRoute tanımı (PrivateRoute.js)
+├── services/             # (API katmanı gelecekse burada olacak)
+├── utils/                # Yardımcı fonksiyonlar
+
+
+Teknolojiler ve Yapılar
+React (Hooks + Functional Components)
+
+React Router DOM v6
+
+Context API ile global state yönetimi
+
+localStorage entegrasyonu
+
+Modüler CSS
+
+Backend hazırlandığında kolay entegrasyon için sade mimari
+
+📂 Veri Yönetimi
+🛍️ Ürün Verisi
+src/models/mockProducts.js
+→ Ürünler burada tutulur
+→ Hem ürün listesi hem ürün detay sayfası bu kaynaktan veri çeker
+
+📋 Sipariş Verisi
+src/models/mockOrders.js
+→ Sahte sipariş geçmişi verisi
+→ /orders sayfasında gösterilir
+
