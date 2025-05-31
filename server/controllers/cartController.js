@@ -1,14 +1,11 @@
-// server/controllers/cartController.js
 const supabase = require("../services/supabase");
 const supabaseAdmin = require("../services/supabase").supabaseAdmin;
 
 // Sepete ekle veya var ise adeti güncelle
 const addToCart = async (req, res) => {
-  const user_id = Number(req.user.id);
-  if (isNaN(user_id)) return res.status(401).json({ error: "Geçersiz kullanıcı" });
-
-  
+  const user_id = req.user.id; // UUID olarak kullan
   const { product_id, quantity = 1 } = req.body;
+
   if (!product_id || !quantity) {
     return res.status(400).json({ error: "product_id ve quantity zorunlu" });
   }
@@ -49,14 +46,14 @@ const addToCart = async (req, res) => {
 
 // Sepeti getir
 const getCart = async (req, res) => {
-  const user_id = Number(req.user.id);
-  if (isNaN(user_id)) return res.status(401).json({ error: "Geçersiz kullanıcı" });
+    const user_id = req.user.id; // ✅ UUID string olarak kullan
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("cart")
       .select("id, product_id, quantity, created_at")
       .eq("user_id", user_id);
+
     if (error) throw error;
     return res.status(200).json(data);
   } catch (err) {
@@ -67,10 +64,9 @@ const getCart = async (req, res) => {
 
 // Sepet öğesini sil
 const deleteCartItem = async (req, res) => {
-  const user_id = Number(req.user.id);
-  if (isNaN(user_id)) return res.status(401).json({ error: "Geçersiz kullanıcı" });
-
+  const user_id = req.user.id;
   const id = Number(req.params.id);
+
   try {
     const { data: existing, error: fetchError } = await supabase
       .from("cart")
@@ -99,9 +95,7 @@ const deleteCartItem = async (req, res) => {
 
 // Adeti güncelle
 const updateCartItem = async (req, res) => {
-  const user_id = Number(req.user.id);
-  if (isNaN(user_id)) return res.status(401).json({ error: "Geçersiz kullanıcı" });
-
+  const user_id = req.user.id;
   const id = Number(req.params.id);
   const { quantity } = req.body;
 

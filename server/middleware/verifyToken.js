@@ -1,10 +1,9 @@
-// server/middleware/verifyToken.js
-
 const jwt = require("jsonwebtoken");
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization || "";
-  // “Bearer xxx” veya direkt “xxx” ikisini de kabul edelim
+
+  // “Bearer xxx” veya direkt “xxx” ikisini de kabul eder
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : authHeader.trim();
@@ -12,21 +11,22 @@ const verifyToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ error: "Token eksik veya hatalı" });
   }
+//
 
-  
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // decoded içinde userId veya id hangisi varsa o değeri number olarak al
-    const rawId = decoded.userId || decoded.id;
-    const id = Number(rawId);
-    if (isNaN(id)) {
+
+    // UUID olabilir, Number() kullanma!
+    if (!decoded.userId || typeof decoded.userId !== "string") {
       return res.status(401).json({ error: "Token içeriği geçersiz" });
     }
+
     req.user = {
-      id,                     // artık kesin number
+      id: decoded.userId,           // UUID string olarak bırakıldı
       email: decoded.email,
-      role:  decoded.role
+      role: decoded.role
     };
+
     next();
   } catch (err) {
     console.error("verifyToken hata:", err);

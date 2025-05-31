@@ -1,60 +1,65 @@
 // server/controllers/orderController.js
+
 const supabase = require("../services/supabase");
 const supabaseAdmin = require("../services/supabase").supabaseAdmin;
 const { sendMail } = require("../services/emailService");
 
 // Sipariş oluştur
 async function createOrder(req, res) {
-  const userId = Number(req.user.id);
+  const userId = req.user.id;           // UUID (string)
   const userEmail = req.user.email;
-  if (isNaN(userId)) return res.status(401).json({ error: "Geçersiz kullanıcı" });
+
+  if (!userId || typeof userId !== "string") {
+    return res.status(401).json({ error: "Geçersiz kullanıcı" });
+  }
 
   try {
-    // items body'de varsa kullan, yoksa sepete bak
+    // Body'de items varsa onları, yoksa cart'ı kullan
     let items = Array.isArray(req.body.items) && req.body.items.length
       ? req.body.items
       : (await supabase
           .from("cart")
           .select("product_id, quantity")
-          .eq("user_id", userId)
-        ).data;
+          .eq("user_id", userId)).data;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: "Sipariş için en az bir ürün olmalı" });
     }
 
-    // Ürün fiyatları
     const productIds = items.map(i => i.product_id);
     const { data: products, error: prodErr } = await supabase
       .from("crud")
       .select("id, price")
       .in("id", productIds);
+
     if (prodErr) throw prodErr;
 
-    // order_items nesnelerini oluştur
-    const orderItems = items.map(i => ({
-      product_id: i.product_id,
-      quantity: i.quantity,
-      unit_price: products.find(p => p.id === i.product_id)?.price || 0
-    }));
+    const orderItems = items.map(i => {
+      const product = products.find(p => p.id === i.product_id);
+      return {
+        product_id: i.product_id,
+        quantity: i.quantity,
+        unit_price: product?.price || 0
+      };
+    });
 
-    // Toplam hesapla
-    const total_amount = orderItems.reduce((sum, it) => sum + it.unit_price * it.quantity, 0);
+    const total_amount = orderItems.reduce(
+      (sum, it) => sum + it.unit_price * it.quantity,
+      0
+    );
 
-    // orders tablosuna insert
     const { data: order, error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert([{ user_id: userId, total_amount, status: "pending" }])
       .select()
       .single();
+
     if (orderErr) throw orderErr;
 
-    // order_items tablosuna insert
     await supabaseAdmin
       .from("order_items")
       .insert(orderItems.map(it => ({ order_id: order.id, ...it })));
 
-    // Stok güncelle
     await Promise.all(
       items.map(async it => {
         const { data: current } = await supabase
@@ -69,13 +74,11 @@ async function createOrder(req, res) {
       })
     );
 
-    // Sepeti temizle
     await supabaseAdmin
       .from("cart")
       .delete()
       .eq("user_id", userId);
 
-    // E-posta bildirimi
     sendMail({
       to: userEmail,
       subject: "Siparişiniz Alındı",
@@ -84,16 +87,19 @@ async function createOrder(req, res) {
     }).catch(err => console.error("E-posta gönderilemedi:", err));
 
     return res.status(201).json(order);
+
   } catch (err) {
     console.error("createOrder error:", err);
     return res.status(500).json({ error: err.message });
   }
 }
 
-// Kullanıcının siparişlerini sayfalı getir
+// Kullanıcının kendi siparişlerini getir (UUID uyumlu)
 async function getMyOrders(req, res) {
-  const userId = Number(req.user.id);
-  if (isNaN(userId)) return res.status(401).json({ error: "Geçersiz kullanıcı" });
+  const userId = req.user.id;
+  if (!userId || typeof userId !== "string") {
+    return res.status(401).json({ error: "Geçersiz kullanıcı" });
+  }
 
   try {
     const page = Number(req.query.page) || 1;
@@ -124,13 +130,15 @@ async function getMyOrders(req, res) {
 async function getOrderById(req, res) {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Geçersiz sipariş ID" });
+
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("orders")
       .select(`id, user_id, order_items(*), total_amount, status, created_at`)
       .eq("id", id)
       .single();
     if (error) return res.status(404).json({ error: "Sipariş bulunamadı" });
+
     return res.status(200).json(data);
   } catch (err) {
     console.error("getOrderById error:", err);
@@ -138,13 +146,30 @@ async function getOrderById(req, res) {
   }
 }
 
-// Admin veya kullanıcı: sipariş durum güncelle
+// Admin: tüm siparişleri getir
+async function getAllOrders(req, res) {
+  try {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*, order_items(*)")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("getAllOrders error:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+// Sipariş durumunu güncelle
 async function updateOrderStatus(req, res) {
   const orderId = Number(req.params.id);
   const { status } = req.body;
   if (isNaN(orderId) || typeof status !== "string") {
     return res.status(400).json({ error: "Geçersiz parametre" });
   }
+
   try {
     const { data, error } = await supabaseAdmin
       .from("orders")
@@ -153,6 +178,7 @@ async function updateOrderStatus(req, res) {
       .select()
       .single();
     if (error) return res.status(404).json({ error: "Güncelleme başarısız" });
+
     return res.status(200).json(data);
   } catch (err) {
     console.error("updateOrderStatus error:", err);
@@ -160,13 +186,15 @@ async function updateOrderStatus(req, res) {
   }
 }
 
-// İptal et ve stok iade et
+// Siparişi iptal et ve stokları iade et
 async function cancelOrder(req, res) {
   const orderId = Number(req.params.id);
-  const userId = Number(req.user.id);
+  const userId = req.user.id;
   const isAdmin = req.user.role === "admin";
 
-  if (isNaN(userId)) return res.status(401).json({ error: "Geçersiz kullanıcı" });
+  if (!userId || typeof userId !== "string") {
+    return res.status(401).json({ error: "Geçersiz kullanıcı" });
+  }
 
   try {
     const { data: order, error: ordErr } = await supabase
@@ -222,41 +250,4 @@ module.exports = {
   updateOrderStatus,
   cancelOrder
 };
-
-
-// server/routes/orders.js
-const express      = require("express");
-const router       = express.Router();
-const verifyToken  = require("../middleware/verifyToken");
-const checkAdmin   = require("../middleware/checkAdmin");
-const {
-  createOrder,
-  getMyOrders,
-  getOrderById,
-  getAllOrders,
-  updateOrderStatus,
-  cancelOrder
-} = require("../controllers/orderController");
-
-// Hepsi token doğrulama gerektirir
-router.use(verifyToken);
-
-// POST   /api/orders           → Sepetten veya body’den sipariş oluştur
-router.post("/", createOrder);
-
-// GET    /api/orders           → Kendi siparişlerini listele
-router.get("/", getMyOrders);
-
-// GET    /api/orders/all       → Admin: tüm siparişleri listele
-router.get("/all", checkAdmin, getAllOrders);
-
-// GET    /api/orders/:id       → Sipariş detayını döndür
-router.get("/:id", getOrderById);
-
-// PUT    /api/orders/:id/status  → Admin: sipariş durumunu güncelle
-router.put("/:id/status", checkAdmin, updateOrderStatus);
-
-// PATCH  /api/orders/:id/cancel  → Kullanıcı veya Admin siparişi iptal etsin
-router.patch("/:id/cancel", cancelOrder);
-
-module.exports = router;
+//

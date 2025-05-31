@@ -1,25 +1,40 @@
 // __tests__/cartController.test.js
 const request = require("supertest");
-const app     = require("../index");
+const app = require("../index");
+
+let token;
+let productId;
+const email = `test_cart_${Date.now()}@example.com`;
+const password = "CartPass123";
+
+beforeAll(async () => {
+  // Register
+  await request(app)
+    .post("/api/auth/register")
+    .send({ email, password });
+
+  // Login and get token
+  const loginRes = await request(app)
+    .post("/api/auth/login")
+    .send({ email, password });
+
+  token = loginRes.body.token;
+
+  // Ürün oluştur (stok kontrolü olan testler için gerekebilir)
+  const productRes = await request(app)
+    .post("/api/products")
+    .set("Authorization", `Bearer ${token}`)
+    .send({
+      name: "Test Ürün",
+      description: "Açıklama",
+      price: 99.99,
+      image_url: "https://via.placeholder.com/150",
+      stock: 50
+    });
+  productId = productRes.body.id;
+});
 
 describe("Cart Controller", () => {
-  let token, productId;
-
-  beforeAll(async () => {
-    // 1) Giriş yap, token al
-    const login = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "testuser@example.com", password: "Password123" });
-    token = login.body.token;
-
-    // 2) Test ürünü oluştur, ID'sini sakla
-    const prod = await request(app)
-      .post("/api/products")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ name: "Test Ürün", description: "Test", price: 9.99 });
-    productId = prod.body.id;
-  });
-
   it("POST /api/cart → 201, ürünü sepete eklemeli", async () => {
     const res = await request(app)
       .post("/api/cart")
