@@ -1,5 +1,3 @@
-// server/controllers/orderController.js
-
 const supabase = require("../services/supabase");
 const supabaseAdmin = require("../services/supabase").supabaseAdmin;
 const { sendMail } = require("../services/emailService");
@@ -14,13 +12,15 @@ async function createOrder(req, res) {
   }
 
   try {
-    // Body'de items varsa onları, yoksa cart'ı kullan
+    // Body'de items varsa onları, yoksa cart'ı kullan (admin ile)
     let items = Array.isArray(req.body.items) && req.body.items.length
       ? req.body.items
-      : (await supabase
+      : (await supabaseAdmin
           .from("cart")
           .select("product_id, quantity")
           .eq("user_id", userId)).data;
+
+    console.log("Sepetteki ürünler:", items);
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: "Sipariş için en az bir ürün olmalı" });
@@ -31,7 +31,6 @@ async function createOrder(req, res) {
       .from("crud")
       .select("id, price")
       .in("id", productIds);
-
     if (prodErr) throw prodErr;
 
     const orderItems = items.map(i => {
@@ -53,7 +52,6 @@ async function createOrder(req, res) {
       .insert([{ user_id: userId, total_amount, status: "pending" }])
       .select()
       .single();
-
     if (orderErr) throw orderErr;
 
     await supabaseAdmin
@@ -94,7 +92,7 @@ async function createOrder(req, res) {
   }
 }
 
-// Kullanıcının kendi siparişlerini getir (UUID uyumlu)
+// Kendi siparişlerini getir
 async function getMyOrders(req, res) {
   const userId = req.user.id;
   if (!userId || typeof userId !== "string") {
@@ -126,7 +124,7 @@ async function getMyOrders(req, res) {
   }
 }
 
-// Sipariş detayı getir
+// Sipariş detayı
 async function getOrderById(req, res) {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Geçersiz sipariş ID" });
@@ -162,7 +160,7 @@ async function getAllOrders(req, res) {
   }
 }
 
-// Sipariş durumunu güncelle
+// Sipariş durumu güncelle
 async function updateOrderStatus(req, res) {
   const orderId = Number(req.params.id);
   const { status } = req.body;
@@ -186,7 +184,7 @@ async function updateOrderStatus(req, res) {
   }
 }
 
-// Siparişi iptal et ve stokları iade et
+// Siparişi iptal et
 async function cancelOrder(req, res) {
   const orderId = Number(req.params.id);
   const userId = req.user.id;
@@ -250,4 +248,3 @@ module.exports = {
   updateOrderStatus,
   cancelOrder
 };
-//

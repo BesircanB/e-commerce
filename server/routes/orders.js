@@ -1,4 +1,3 @@
-// server/routes/orders.js
 const express      = require("express");
 const router       = express.Router();
 const verifyToken  = require("../middleware/verifyToken");
@@ -12,25 +11,24 @@ const {
   cancelOrder
 } = require("../controllers/orderController");
 
-// Hepsi token doğrulama gerektirir
 router.use(verifyToken);
 
-// POST   /api/orders           → Sepetten veya body’den sipariş oluştur
+// POST   /api/orders
 router.post("/", createOrder);
 
-// GET    /api/orders           → Kendi siparişlerini listele
-router.get("/", getMyOrders);
-
-// GET    /api/orders/all       → Admin: tüm siparişleri listele
+// GET    /api/orders/all
 router.get("/all", checkAdmin, getAllOrders);
 
-// GET    /api/orders/:id       → Sipariş detayını döndür
+// GET    /api/orders/my
+router.get("/my", getMyOrders);
+
+// GET    /api/orders/:id
 router.get("/:id", getOrderById);
 
-// PUT    /api/orders/:id/status  → Admin: sipariş durumunu güncelle
+// PUT    /api/orders/:id/status
 router.put("/:id/status", checkAdmin, updateOrderStatus);
 
-// PATCH  /api/orders/:id/cancel  → Kullanıcı veya Admin siparişi iptal etsin
+// PATCH  /api/orders/:id/cancel
 router.patch("/:id/cancel", cancelOrder);
 
 module.exports = router;
