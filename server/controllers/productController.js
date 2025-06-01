@@ -1,34 +1,66 @@
+// server/controllers/productController.js
 const supabase = require("../services/supabase");
 
+
 // GET /api/products → Kullanıcılara özel (sadece görünür ürünler)
+// GET /api/products?name=&category=&minPrice=&maxPrice=&page=&limit=
+
+
 const getAllProducts = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
-    const minPrice = req.query.minPrice != null ? Number(req.query.minPrice) : null;
-    const maxPrice = req.query.maxPrice != null ? Number(req.query.maxPrice) : null;
     const offset = (page - 1) * limit;
 
+    const name = req.query.name?.toLowerCase() || null;
+    const category = req.query.category?.toLowerCase() || null;
+    const minPrice = req.query.minPrice != null ? Number(req.query.minPrice) : null;
+    const maxPrice = req.query.maxPrice != null ? Number(req.query.maxPrice) : null;
+
+    // Ana ürün sorgusu (ilişkili kategori adı dahil)
     let query = supabase
       .from("crud")
-      .select("*", { count: "exact" })
+      .select("*, categories(name)", { count: "exact" }) // JOIN işlemi
       .eq("is_visible", true);
 
+    // Filtreler
+    if (name) query = query.ilike("name", `%${name}%`);
     if (minPrice !== null) query = query.gte("price", minPrice);
     if (maxPrice !== null) query = query.lte("price", maxPrice);
 
-    const { data, error, count } = await query
+    if (category) {
+      // Kategori adı varsa, önce ID'yi bul
+      const { data: catData, error: catErr } = await supabase
+        .from("categories")
+        .select("id")
+        .ilike("name", `%${category}%`)
+        .single();
+
+      if (catErr || !catData) {
+        return res.status(400).json({ error: "Kategori bulunamadı" });
+      }
+
+      query = query.eq("category_id", catData.id);
+    }
+
+    const { data, count, error } = await query
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) throw error;
 
-    return res.json({ page, limit, total: count, data });
+    return res.json({
+      page,
+      limit,
+      total: count,
+      data
+    });
   } catch (err) {
     console.error("Get all products error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 // GET /api/products/all → Admin'e özel, tüm ürünler
 const getAllProductsAdmin = async (req, res) => {
@@ -105,22 +137,50 @@ const getProductByIdAdmin = async (req, res) => {
 
 // POST /api/products
 const createProduct = async (req, res) => {
-  const { name, description, price, image_url, stock = 0 } = req.body;
+  const { name, description, price, image_url, stock = 0, category_id } = req.body;
+
+  // Zorunlu alanlar kontrolü
   if (!name || price == null) {
-    return res.status(400).json({ error: "Name ve price zorunlu" });
+    return res.status(400).json({ error: "Name ve price zorunludur" });
   }
+
+  // Fiyat negatif olamaz
+  if (isNaN(price) || price < 0) {
+    return res.status(400).json({ error: "Fiyat 0'dan küçük olamaz" });
+  }
+
+  // Stok negatif olamaz
+  if (isNaN(stock) || stock < 0) {
+    return res.status(400).json({ error: "Stok eksi olamaz veya geçersizdir" });
+  }
+
+  const productData = {
+    name,
+    description,
+    price,
+    image_url,
+    stock,
+  };
+
+  if (category_id != null) {
+    productData.category_id = category_id;
+  }
+
   try {
     const { data, error } = await supabase
       .from("crud")
-      .insert([{ name, description, price, image_url, stock }])
+      .insert([productData])
       .select();
+
     if (error) throw error;
+
     return res.status(201).json(data[0]);
   } catch (err) {
     console.error("Create product error:", err);
     return res.status(400).json({ error: err.message });
   }
 };
+
 
 // PUT /api/products/:id
 const updateProduct = async (req, res) => {
@@ -178,7 +238,42 @@ const updateProductStock = async (req, res) => {
   }
 };
 
-// DELETE /api/products/:id → Mantıksal silme
+// PUT /api/products/:id/visibility → ürün görünürlüğünü güncelle (mantıksal silmeyle uyumlu)
+const updateProductVisibility = async (req, res) => {
+  const id = Number(req.params.id);
+  const { is_visible } = req.body;
+
+  if (typeof is_visible !== "boolean") {
+    return res.status(400).json({ error: "is_visible alanı boolean olmalıdır" });
+  }
+
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from("crud")
+      .select("id")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existing) {
+      return res.status(404).json({ error: "Ürün bulunamadı" });
+    }
+
+    const { data, error } = await supabase
+      .from("crud")
+      .update({ is_visible })
+      .eq("id", id)
+      .select();
+
+    if (error) throw error;
+
+    return res.status(200).json({ message: "Görünürlük güncellendi", product: data[0] });
+  } catch (err) {
+    console.error("Update product visibility error:", err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// DELETE /api/products/:id → mantıksal silme (is_visible: false)
 const deleteProduct = async (req, res) => {
   const id = Number(req.params.id);
   try {
@@ -187,14 +282,18 @@ const deleteProduct = async (req, res) => {
       .select("id")
       .eq("id", id)
       .single();
+
     if (fetchError || !existing) {
       return res.status(404).json({ error: "Ürün bulunamadı" });
     }
+
     const { error } = await supabase
       .from("crud")
       .update({ is_visible: false })
       .eq("id", id);
+
     if (error) throw error;
+
     return res.json({ message: "Ürün silindi (gizlendi)" });
   } catch (err) {
     console.error("Mantıksal silme hatası:", err);
@@ -210,5 +309,6 @@ module.exports = {
   createProduct,
   updateProduct,
   updateProductStock,
+  updateProductVisibility,
   deleteProduct,
 };

@@ -3,8 +3,9 @@ const supabaseAdmin = require("../services/supabase").supabaseAdmin;
 const { sendMail } = require("../services/emailService");
 
 // Sipariş oluştur
+// Sipariş oluştur
 async function createOrder(req, res) {
-  const userId = req.user.id;           // UUID (string)
+  const userId = req.user.id;
   const userEmail = req.user.email;
 
   if (!userId || typeof userId !== "string") {
@@ -12,7 +13,7 @@ async function createOrder(req, res) {
   }
 
   try {
-    // Body'de items varsa onları, yoksa cart'ı kullan (admin ile)
+    // 1. Sepetteki ürünleri al
     let items = Array.isArray(req.body.items) && req.body.items.length
       ? req.body.items
       : (await supabaseAdmin
@@ -20,33 +21,74 @@ async function createOrder(req, res) {
           .select("product_id, quantity")
           .eq("user_id", userId)).data;
 
-    console.log("Sepetteki ürünler:", items);
-
     if (!items || items.length === 0) {
-      return res.status(400).json({ error: "Sipariş için en az bir ürün olmalı" });
+      return res.status(400).json({ error: "Sipariş için ürün seçmelisiniz" });
     }
 
+    // 2. Ürünleri al ve stok/fiyat kontrolü yap
     const productIds = items.map(i => i.product_id);
     const { data: products, error: prodErr } = await supabase
       .from("crud")
-      .select("id, price")
+      .select("id, price, stock")
       .in("id", productIds);
     if (prodErr) throw prodErr;
 
+    for (const item of items) {
+      const product = products.find(p => p.id === item.product_id);
+      if (!product) {
+        return res.status(400).json({ error: `ID ${item.product_id} ürünü bulunamadı` });
+      }
+      if (product.price == null || product.price < 0) {
+        return res.status(400).json({ error: `Ürün fiyatsız veya negatif: ID ${product.id}` });
+      }
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ error: `Stok yetersiz: ${product.stock} adet kaldı (ID: ${product.id})` });
+      }
+    }
+
+    // 3. Sipariş kalemlerini oluştur
     const orderItems = items.map(i => {
       const product = products.find(p => p.id === i.product_id);
       return {
         product_id: i.product_id,
         quantity: i.quantity,
-        unit_price: product?.price || 0
+        unit_price: product.price
       };
     });
 
-    const total_amount = orderItems.reduce(
-      (sum, it) => sum + it.unit_price * it.quantity,
+    const totalWithoutDiscount = orderItems.reduce(
+      (sum, item) => sum + item.quantity * item.unit_price,
       0
     );
 
+    // 4. Sepette kupon varsa indirimi hesapla
+    let discount = 0;
+    const { data: cartData, error: cartErr } = await supabase
+      .from("cart")
+      .select("coupon_code")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (cartErr) throw cartErr;
+
+    if (cartData?.coupon_code) {
+      const { data: campaign, error: campErr } = await supabase
+        .from("campaigns")
+        .select("discount_percent")
+        .eq("code", cartData.coupon_code)
+        .lte("start_date", new Date().toISOString())
+        .gte("end_date", new Date().toISOString())
+        .eq("is_active", true)
+        .maybeSingle();
+      if (campErr) throw campErr;
+
+      if (campaign?.discount_percent > 0) {
+        discount = totalWithoutDiscount * (campaign.discount_percent / 100);
+      }
+    }
+
+    const total_amount = parseFloat((totalWithoutDiscount - discount).toFixed(2));
+
+    // 5. Siparişi kaydet
     const { data: order, error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert([{ user_id: userId, total_amount, status: "pending" }])
@@ -58,39 +100,48 @@ async function createOrder(req, res) {
       .from("order_items")
       .insert(orderItems.map(it => ({ order_id: order.id, ...it })));
 
-    await Promise.all(
-      items.map(async it => {
-        const { data: current } = await supabase
-          .from("crud")
-          .select("stock")
-          .eq("id", it.product_id)
-          .single();
-        return supabaseAdmin
-          .from("crud")
-          .update({ stock: current.stock - it.quantity })
-          .eq("id", it.product_id);
-      })
-    );
+    // 6. Stokları düşür
+    for (const it of items) {
+      const { data: current } = await supabase
+        .from("crud")
+        .select("stock")
+        .eq("id", it.product_id)
+        .single();
 
+      if (current.stock < it.quantity) {
+        return res.status(400).json({
+          error: `İşlem sırasında stok tükendi (ID: ${it.product_id})`
+        });
+      }
+
+      await supabaseAdmin
+        .from("crud")
+        .update({ stock: current.stock - it.quantity })
+        .eq("id", it.product_id);
+    }
+
+    // 7. Sepeti temizle
     await supabaseAdmin
       .from("cart")
       .delete()
       .eq("user_id", userId);
 
+    // 8. E-posta gönder
     sendMail({
       to: userEmail,
       subject: "Siparişiniz Alındı",
-      text: `Siparişiniz (ID: ${order.id}) başarıyla alındı.`,
+      text: `Sipariş (ID: ${order.id}) alındı. Toplam: ${total_amount} TL`,
       html: `<p>Sipariş ID: <strong>${order.id}</strong><br/>Toplam: ${total_amount} TL</p>`
-    }).catch(err => console.error("E-posta gönderilemedi:", err));
+    }).catch(err => console.error("E-posta hatası:", err));
 
     return res.status(201).json(order);
-
   } catch (err) {
     console.error("createOrder error:", err);
     return res.status(500).json({ error: err.message });
   }
 }
+
+
 
 // Kendi siparişlerini getir
 async function getMyOrders(req, res) {
@@ -130,35 +181,83 @@ async function getOrderById(req, res) {
   if (isNaN(id)) return res.status(400).json({ error: "Geçersiz sipariş ID" });
 
   try {
-    const { data, error } = await supabaseAdmin
+    // 1. Siparişi ve içindeki order_items'ları al
+    const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
-      .select(`id, user_id, order_items(*), total_amount, status, created_at`)
+      .select(`id, user_id, total_amount, status, created_at, order_items(*)`)
       .eq("id", id)
       .single();
-    if (error) return res.status(404).json({ error: "Sipariş bulunamadı" });
 
-    return res.status(200).json(data);
+    if (orderError || !order) {
+      return res.status(404).json({ error: "Sipariş bulunamadı" });
+    }
+
+    // 2. İlgili tüm ürün bilgilerini topla
+    const productIds = order.order_items.map(item => item.product_id);
+    const { data: products, error: productError } = await supabase
+      .from("crud")
+      .select("id, name, price, image_url")
+      .in("id", productIds);
+
+    if (productError) throw productError;
+
+    // 3. Her sipariş kalemine ürün detaylarını ekle
+    order.order_items = order.order_items.map(item => {
+      const matchedProduct = products.find(p => p.id === item.product_id);
+      return {
+        ...item,
+        product: matchedProduct || null
+      };
+    });
+
+    return res.status(200).json(order);
   } catch (err) {
     console.error("getOrderById error:", err);
     return res.status(500).json({ error: err.message });
   }
 }
 
-// Admin: tüm siparişleri getir
 async function getAllOrders(req, res) {
   try {
-    const { data, error } = await supabase
+    // 1. Siparişleri ve order_items'ları çek
+    const { data: orders, error } = await supabaseAdmin
       .from("orders")
-      .select("*, order_items(*)")
+      .select("id, user_id, total_amount, status, created_at, order_items(*)")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return res.status(200).json(data);
+
+    // 2. Tüm order_items'lardan product_id'leri topla
+    const allItems = orders.flatMap(order => order.order_items);
+    const productIds = [...new Set(allItems.map(item => item.product_id))];
+
+    // 3. Ürün bilgilerini al
+    const { data: products, error: prodErr } = await supabase
+      .from("crud")
+      .select("id, name, price, image_url")
+      .in("id", productIds);
+
+    if (prodErr) throw prodErr;
+
+    // 4. Her siparişteki her item’a ürün bilgisi ekle
+    const ordersWithProductDetails = orders.map(order => ({
+      ...order,
+      order_items: order.order_items.map(item => {
+        const product = products.find(p => p.id === item.product_id);
+        return {
+          ...item,
+          product: product || null
+        };
+      })
+    }));
+
+    return res.status(200).json(ordersWithProductDetails);
   } catch (err) {
     console.error("getAllOrders error:", err);
     return res.status(500).json({ error: err.message });
   }
 }
+
 
 // Sipariş durumu güncelle
 async function updateOrderStatus(req, res) {

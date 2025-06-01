@@ -29,6 +29,12 @@ const cartRoutes     = require("./routes/cart");
 const orderRoutes    = require("./routes/orders");
 const reviewRoutes   = require("./routes/reviews");
 const adminRoutes    = require("./routes/admin");
+const categoryRoutes = require("./routes/categories");
+const wishlistRoutes = require("./routes/wishlist");
+const campaignRoutes = require("./routes/campaigns");
+
+
+
 
 app.use("/api/auth",     authRoutes);
 app.use("/api/users",    userRoutes);
@@ -37,6 +43,9 @@ app.use("/api/cart",     cartRoutes);
 app.use("/api/orders",   orderRoutes);
 app.use("/api/reviews",  reviewRoutes);
 app.use("/api/admin",    adminRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/campaigns", campaignRoutes);
 
 // Sağlık kontrolleri
 app.get("/", (req, res) => res.send("E-commerce API anasayfasına hoş geldiniz!"));

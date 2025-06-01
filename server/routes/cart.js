@@ -17,7 +17,8 @@ const {
   addToCart,
   getCart,
   updateCartItem,
-  deleteCartItem
+  deleteCartItem,
+  applyCouponToCart   
 } = cartController;
 
 // Tüm cart rotaları için JWT doğrulama
@@ -38,5 +39,8 @@ router.put("/:id", updateCartItem);
 // DELETE /cart/:id → Sepet öğesini sil
 if (typeof deleteCartItem !== 'function') console.error("HATA: deleteCartItem bir fonksiyon değil!");
 router.delete("/:id", deleteCartItem);
+
+router.post("/apply-coupon", verifyToken, applyCouponToCart);
+
 
 module.exports = router;
