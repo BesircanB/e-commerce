@@ -40,7 +40,7 @@ router.put("/:id", updateCartItem);
 if (typeof deleteCartItem !== 'function') console.error("HATA: deleteCartItem bir fonksiyon değil!");
 router.delete("/:id", deleteCartItem);
 
-router.post("/apply-coupon", verifyToken, applyCouponToCart);
+router.post("/apply-coupon",applyCouponToCart);
 
 
 module.exports = router;

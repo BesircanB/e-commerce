@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Modal from "../components/Modal";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import axios from "../services/axiosInstance";
+import GoogleLoginButton from "../components/GoogleLoginButton"; // ✅ yeni bileşen
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -11,22 +13,20 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    try {
+      const response = await axios.post("/auth/login", { email, password });
 
-  // ✅ Role belirle
-  const role =
-    email === "admin@example.com" || email === "admin2@example.com"
-      ? "admin"
-      : "user";
+      const { token, user } = response.data;
 
-  // ✅ Role ile login yap
-  login({ email, role });
+      // AuthContext'e login (hem user hem token)
+      login({ userData: user, token });
 
-  // ✅ Role'a göre yönlendirme
-  navigate(role === "admin" ? "/admin" : "/");
-  };
-
-  const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+      // Role bazlı yönlendirme
+      navigate(user.role === "admin" ? "/admin" : "/");
+    } catch (err) {
+      console.error("Login error:", err);
+      alert(err.response?.data?.error || "Giriş başarısız");
+    }
   };
 
   return (
@@ -59,14 +59,8 @@ const LoginPage = () => {
 
         <div className="divider">veya</div>
 
-        <button type="button" className="google-button" onClick={handleGoogleLogin}>
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="Google"
-            className="google-icon"
-          />
-          Google ile Giriş Yap
-        </button>
+        {/* ✅ Yeni Google Login butonu */}
+        <GoogleLoginButton />
       </form>
     </Modal>
   );

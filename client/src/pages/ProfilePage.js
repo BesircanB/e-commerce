@@ -2,99 +2,96 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
-import { useAddress } from "../context/AddressContext";
+import axios from "../services/axiosInstance";
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
-  const { address, setAddress } = useAddress();
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    address: user?.address || "",
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setAddress((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const toggleEdit = () => setEditing(!editing);
+  const toggleEdit = () => setEditing((prev) => !prev);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put("/users/profile", formData);
+      updateUser(res.data.user); // AuthContext güncelle
+      setEditing(false);
+      alert("Profil güncellendi");
+    } catch (err) {
+      console.error("Profil güncelleme hatası:", err);
+      alert(err.response?.data?.error || "Bir hata oluştu");
+    }
+  };
 
   return (
     <div>
       <Header />
       <div style={{ padding: "2rem" }}>
         <h2>Profilim</h2>
-        <p><strong>İsim:</strong> {user?.name || "Kullanıcı"}</p>
-        <p><strong>Email:</strong> {user?.email}</p>
-
-        <div style={{ marginTop: "1rem" }}>
-          <button
-            style={{ marginRight: "1rem" }}
-            onClick={() => navigate("/change-password")}
-          >
-            Şifre Değiştir
-          </button>
-          <button onClick={() => navigate("/orders")}>Siparişlerim</button>
-        </div>
-
-        <hr style={{ margin: "2rem 0" }} />
-
-        <h3>Adres Bilgileri</h3>
 
         {editing ? (
-          <form>
+          <form onSubmit={handleSubmit}>
             <input
               type="text"
-              name="fullName"
-              value={address.fullName}
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               placeholder="Ad Soyad"
-              style={{ display: "block", margin: "0.5rem 0" }}
+            />
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="E-posta"
             />
             <input
               type="text"
-              name="street"
-              value={address.street}
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
-              placeholder="Sokak / Cadde"
-              style={{ display: "block", margin: "0.5rem 0" }}
+              placeholder="Telefon"
             />
             <input
               type="text"
-              name="city"
-              value={address.city}
+              name="address"
+              value={formData.address}
               onChange={handleChange}
-              placeholder="Şehir"
-              style={{ display: "block", margin: "0.5rem 0" }}
+              placeholder="Adres"
             />
-            <input
-              type="text"
-              name="postalCode"
-              value={address.postalCode}
-              onChange={handleChange}
-              placeholder="Posta Kodu"
-              style={{ display: "block", margin: "0.5rem 0" }}
-            />
-            <input
-              type="text"
-              name="country"
-              value={address.country}
-              onChange={handleChange}
-              placeholder="Ülke"
-              style={{ display: "block", margin: "0.5rem 0" }}
-            />
-            <button type="button" onClick={toggleEdit}>Kaydet</button>
+            <button type="submit">Kaydet</button>
+            <button type="button" onClick={toggleEdit}>
+              Vazgeç
+            </button>
           </form>
         ) : (
           <div>
-            <p><strong>Ad Soyad:</strong> {address.fullName || "-"}</p>
-            <p><strong>Adres:</strong> {address.street || "-"}</p>
-            <p><strong>Şehir:</strong> {address.city || "-"}</p>
-            <p><strong>Posta Kodu:</strong> {address.postalCode || "-"}</p>
-            <p><strong>Ülke:</strong> {address.country || "-"}</p>
-            <button onClick={toggleEdit}>Düzenle</button>
+            <p><strong>Ad Soyad:</strong> {user?.name}</p>
+            <p><strong>Email:</strong> {user?.email}</p>
+            <p><strong>Telefon:</strong> {user?.phone || "-"}</p>
+            <p><strong>Adres:</strong> {user?.address || "-"}</p>
+
+            <div style={{ marginTop: "1rem" }}>
+              <button onClick={toggleEdit}>Profili Düzenle</button>
+              <button onClick={() => navigate("/change-password")}>Şifre Değiştir</button>
+              <button onClick={() => navigate("/orders")}>Siparişlerim</button>
+            </div>
           </div>
         )}
       </div>

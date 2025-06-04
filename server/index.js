@@ -22,41 +22,41 @@ if (process.env.NODE_ENV === "test") {
 }
 
 // Route’lar
-const authRoutes     = require("./routes/auth");
-const userRoutes     = require("./routes/users");
-const productRoutes  = require("./routes/products");
-const cartRoutes     = require("./routes/cart");
-const orderRoutes    = require("./routes/orders");
-const reviewRoutes   = require("./routes/reviews");
-const adminRoutes    = require("./routes/admin");
-const categoryRoutes = require("./routes/categories");
-const wishlistRoutes = require("./routes/wishlist");
-const campaignRoutes = require("./routes/campaigns");
+const authRoutes       = require("./routes/auth");
+const userRoutes       = require("./routes/users");
+const productRoutes    = require("./routes/products");
+const cartRoutes       = require("./routes/cart");
+const orderRoutes      = require("./routes/orders");
+const reviewRoutes     = require("./routes/reviews"); // ✅ RESTful uyumlu hale getirildi
+const adminRoutes      = require("./routes/admin");
+const categoryRoutes   = require("./routes/categories");
+const wishlistRoutes   = require("./routes/wishlist");
+const campaignRoutes   = require("./routes/campaigns");
 
-
-
-
-app.use("/api/auth",     authRoutes);
-app.use("/api/users",    userRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/cart",     cartRoutes);
-app.use("/api/orders",   orderRoutes);
-app.use("/api/reviews",  reviewRoutes);
-app.use("/api/admin",    adminRoutes);
+// RESTful API route mount işlemleri
+app.use("/api/auth",       authRoutes);
+app.use("/api/users",      userRoutes);
+app.use("/api/products",   productRoutes);
+app.use("/api/cart",       cartRoutes);
+app.use("/api/orders",     orderRoutes);
+app.use("/api",            reviewRoutes);     // ✅ Artık "/api/products/:id/reviews" gibi çalışır
+app.use("/api/admin",      adminRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/campaigns", campaignRoutes);
+app.use("/api/wishlist",   wishlistRoutes);
+app.use("/api/admin", campaignRoutes); // → /api/admin/campaigns
+app.use("/api/campaigns",  campaignRoutes);
 
-// Sağlık kontrolleri
+
+// Sağlık kontrolü
 app.get("/", (req, res) => res.send("E-commerce API anasayfasına hoş geldiniz!"));
 
-// Hata yakalayıcı (tüm route'lardan sonra gelmeli)
+// Global hata yakalayıcı
 app.use((err, req, res, next) => {
   console.error("Genel Hata Yakalayıcı:", err.stack);
   res.status(500).json({ error: "Sunucu hatası oluştu" });
 });
 
-// **Sadece test ortamı değilse sunucuyu başlat**
+// Sunucuyu başlat (test değilse)
 if (process.env.NODE_ENV !== "test") {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
@@ -64,5 +64,5 @@ if (process.env.NODE_ENV !== "test") {
   });
 }
 
-// **Express app’i export et** (Jest’in supertest ile kullanabilmesi için)
+// Testler için export
 module.exports = app;

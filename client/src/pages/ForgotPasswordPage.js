@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Modal from "../components/Modal";
+import axios from "../services/axiosInstance";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -8,18 +9,12 @@ const ForgotPasswordPage = () => {
   const handleReset = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("http://localhost:5000/api/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
+    try {
+      await axios.post("/auth/forgot-password", { email });
       alert("Şifre sıfırlama bağlantısı gönderildi.");
-    } else {
-      alert(data.message || "İşlem başarısız");
+    } catch (err) {
+      console.error("Şifre sıfırlama hatası:", err);
+      alert(err.response?.data?.error || "İşlem başarısız");
     }
   };
 

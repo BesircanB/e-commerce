@@ -49,7 +49,4 @@ Proje “clean code” ve “modüler yapı” ilkelerine göre geliştirilmekte
 
 Backend (örneğin Supabase) ileriki aşamada entegre edilecektir.
 
-🔁 En son kalınan nokta:
 
-1. Adım: Profil Sayfasına Adres Formu Ekleme
-⏳ Yapım aşamasında. UserAddressContext tanımlandı, ProfilePage formu henüz tamamlanmadı.

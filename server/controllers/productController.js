@@ -139,75 +139,85 @@ const getProductByIdAdmin = async (req, res) => {
 const createProduct = async (req, res) => {
   const { name, description, price, image_url, stock = 0, category_id } = req.body;
 
-  // Zorunlu alanlar kontrolü
+  // 🛑 Zorunlu alan kontrolü
   if (!name || price == null) {
-    return res.status(400).json({ error: "Name ve price zorunludur" });
+    return res.status(400).json({ error: "Ürün adı ve fiyat zorunludur" });
   }
 
-  // Fiyat negatif olamaz
-  if (isNaN(price) || price < 0) {
-    return res.status(400).json({ error: "Fiyat 0'dan küçük olamaz" });
+  // 🛑 Fiyat kontrolü
+  if (isNaN(price) || price <= 0) {
+    return res.status(400).json({ error: "Fiyat 0'dan büyük bir sayı olmalıdır" });
   }
 
-  // Stok negatif olamaz
+  // 🛑 Stok kontrolü
   if (isNaN(stock) || stock < 0) {
-    return res.status(400).json({ error: "Stok eksi olamaz veya geçersizdir" });
+    return res.status(400).json({ error: "Stok sıfır veya daha büyük bir sayı olmalıdır" });
   }
 
+  // ✅ Veri hazırlığı
   const productData = {
     name,
     description,
     price,
     image_url,
     stock,
+    is_visible: true, // default olarak görünür
+    category_id: category_id ?? null
   };
-
-  if (category_id != null) {
-    productData.category_id = category_id;
-  }
 
   try {
     const { data, error } = await supabase
       .from("crud")
       .insert([productData])
-      .select();
+      .select()
+      .single();
 
     if (error) throw error;
 
-    return res.status(201).json(data[0]);
+    return res.status(201).json(data);
   } catch (err) {
     console.error("Create product error:", err);
-    return res.status(400).json({ error: err.message });
+    return res.status(500).json({ error: "Ürün eklenemedi: " + err.message });
   }
 };
+
 
 
 // PUT /api/products/:id
 const updateProduct = async (req, res) => {
   const id = Number(req.params.id);
-  const changes = { ...req.body };
-  delete changes.stock;
+  const updateFields = req.body;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Geçersiz ürün ID" });
+  }
+
+  if (updateFields.price !== undefined && (isNaN(updateFields.price) || updateFields.price <= 0)) {
+    return res.status(400).json({ error: "Fiyat 0'dan büyük olmalıdır" });
+  }
+
+  if (updateFields.stock !== undefined && (isNaN(updateFields.stock) || updateFields.stock < 0)) {
+    return res.status(400).json({ error: "Stok sıfırdan küçük olamaz" });
+  }
+
   try {
-    const { data: existing, error: fetchError } = await supabase
-      .from("crud")
-      .select("id")
-      .eq("id", id)
-      .single();
-    if (fetchError || !existing) {
-      return res.status(404).json({ error: "Ürün bulunamadı" });
-    }
     const { data, error } = await supabase
       .from("crud")
-      .update(changes)
+      .update(updateFields)
       .eq("id", id)
-      .select();
+      .select()
+      .single();
+
     if (error) throw error;
-    return res.json(data[0]);
+    if (!data) return res.status(404).json({ error: "Ürün bulunamadı veya güncellenemedi" });
+
+    return res.status(200).json(data);
   } catch (err) {
-    console.error("Update product error:", err);
-    return res.status(400).json({ error: err.message });
+    console.error("updateProduct error:", err);
+    return res.status(500).json({ error: err.message });
   }
 };
+
 
 // PUT /api/products/:id/stock
 const updateProductStock = async (req, res) => {

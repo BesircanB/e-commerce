@@ -1,8 +1,8 @@
 const supabase = require("../services/supabase");
 
-// GET /api/products/:id/reviews → Bir ürünün tüm yorumları
+// GET /api/products/:product_id/reviews → Ürüne ait yorumları getir
 const getReviewsByProductId = async (req, res) => {
-  const productId = Number(req.params.id);
+  const productId = Number(req.params.product_id);
   if (isNaN(productId)) {
     return res.status(400).json({ error: "Geçersiz ürün ID" });
   }
@@ -22,22 +22,22 @@ const getReviewsByProductId = async (req, res) => {
   }
 };
 
-// POST /api/reviews → Yeni yorum oluştur
+// POST /api/products/:product_id/reviews → Yeni yorum oluştur
 const createReview = async (req, res) => {
   const userId = req.user.id;
-  const { product_id, rating, comment, photo_url } = req.body;
+  const product_id = Number(req.params.product_id);
+  const { rating, comment, photo_url } = req.body;
 
-  if (!product_id) {
-    return res.status(400).json({ error: "Ürün ID zorunludur" });
+  if (isNaN(product_id)) {
+    return res.status(400).json({ error: "Geçersiz ürün ID" });
   }
 
-  // Eğer yorum varsa, geçerli bir yıldız zorunlu
   if (comment && (rating == null || rating < 1 || rating > 5)) {
     return res.status(400).json({ error: "Yorum için geçerli yıldız puanı gerekir (1-5)" });
   }
 
   try {
-    // Aynı ürüne daha önce yorum yapılmış mı?
+    // Zaten yorum yapılmış mı?
     const { data: existing, error: checkErr } = await supabase
       .from("reviews")
       .select("id")
@@ -50,7 +50,7 @@ const createReview = async (req, res) => {
       return res.status(400).json({ error: "Bu ürüne zaten yorum yaptınız" });
     }
 
-    // Ürün sipariş edilmiş mi? (iptal edilenler hariç)
+    // Kullanıcı bu ürünü sipariş etmiş mi?
     const { data: validOrders, error: orderErr } = await supabase
       .from("orders")
       .select("id")
@@ -71,7 +71,6 @@ const createReview = async (req, res) => {
       return res.status(403).json({ error: "Bu ürünü satın almadığınız için yorum yapamazsınız" });
     }
 
-    // Yorum ekle
     const insertData = {
       user_id: userId,
       product_id,
@@ -86,7 +85,6 @@ const createReview = async (req, res) => {
       .select();
 
     if (error) throw error;
-
     return res.status(201).json(data[0]);
   } catch (err) {
     console.error("createReview error:", err);
@@ -94,14 +92,15 @@ const createReview = async (req, res) => {
   }
 };
 
-// PUT /api/reviews/:id → Yorum güncelle
+// PUT /api/products/:product_id/reviews/:id → Yorum güncelle
 const updateReview = async (req, res) => {
   const userId = req.user.id;
   const reviewId = Number(req.params.id);
+  const productId = Number(req.params.product_id);
   const { rating, comment, photo_url } = req.body;
 
-  if (isNaN(reviewId)) {
-    return res.status(400).json({ error: "Geçersiz yorum ID" });
+  if (isNaN(reviewId) || isNaN(productId)) {
+    return res.status(400).json({ error: "Geçersiz ID" });
   }
 
   if (comment && rating == null) {
@@ -118,6 +117,7 @@ const updateReview = async (req, res) => {
       .select("*")
       .eq("id", reviewId)
       .eq("user_id", userId)
+      .eq("product_id", productId)
       .single();
 
     if (fetchErr || !existing) {
@@ -132,7 +132,6 @@ const updateReview = async (req, res) => {
       .single();
 
     if (error) throw error;
-
     return res.json({ message: "Yorum güncellendi", review: data });
   } catch (err) {
     console.error("updateReview error:", err);
@@ -140,13 +139,14 @@ const updateReview = async (req, res) => {
   }
 };
 
-// DELETE /api/reviews/:id → Yorum sil
+// DELETE /api/products/:product_id/reviews/:id → Yorum sil
 const deleteReview = async (req, res) => {
   const userId = req.user.id;
   const reviewId = Number(req.params.id);
+  const productId = Number(req.params.product_id);
 
-  if (isNaN(reviewId)) {
-    return res.status(400).json({ error: "Geçersiz yorum ID" });
+  if (isNaN(reviewId) || isNaN(productId)) {
+    return res.status(400).json({ error: "Geçersiz ID" });
   }
 
   try {
@@ -155,6 +155,7 @@ const deleteReview = async (req, res) => {
       .delete()
       .eq("id", reviewId)
       .eq("user_id", userId)
+      .eq("product_id", productId)
       .select()
       .maybeSingle();
 

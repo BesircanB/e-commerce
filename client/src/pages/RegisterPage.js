@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
+import axios from "../services/axiosInstance";
+import GoogleLoginButton from "../components/GoogleLoginButton"; // ✅ eklendi
 
 const RegisterPage = () => {
   const [email, setEmail] = useState("");
@@ -17,25 +19,19 @@ const RegisterPage = () => {
       return;
     }
 
-    // Backend'e veri gönderme örneği
-    const response = await fetch("http://localhost:5000/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
-    });
+    try {
+      const response = await axios.post("/auth/register", {
+        email,
+        password,
+        name,
+      });
 
-    const data = await response.json();
-
-    if (response.ok) {
       alert("Kayıt başarılı");
       navigate("/login");
-    } else {
-      alert(data.message || "Kayıt başarısız");
+    } catch (err) {
+      console.error("Register error:", err);
+      alert(err.response?.data?.error || "Kayıt başarısız");
     }
-  };
-
-  const handleGoogleRegister = () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
   };
 
   return (
@@ -48,6 +44,7 @@ const RegisterPage = () => {
           placeholder="Ad Soyad"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          required
         />
 
         <input
@@ -83,18 +80,8 @@ const RegisterPage = () => {
 
         <div className="divider">veya</div>
 
-        <button
-          type="button"
-          className="google-button"
-          onClick={handleGoogleRegister}
-        >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="Google"
-            className="google-icon"
-          />
-          Google ile Kayıt Ol
-        </button>
+        {/* ✅ Google ile devam bileşeni */}
+        <GoogleLoginButton />
       </form>
     </Modal>
   );

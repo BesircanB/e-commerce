@@ -6,13 +6,14 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage"; // ✅ eklendi
 import CartPage from "./pages/CartPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import ProfilePage from "./pages/ProfilePage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
-import AdminPage from "./pages/AdminPage"; // ✅ Admin sayfası eklendi
+import AdminPage from "./pages/AdminPage";
 
 // Modal
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -27,7 +28,7 @@ import { OrderProvider } from "./context/OrderContext";
 
 // Route kontrolleri
 import PrivateRoute from "./routes/PrivateRoute";
-import AdminRoute from "./routes/AdminRoute"; // ✅ Admin route eklendi
+import AdminRoute from "./routes/AdminRoute";
 
 // Stil
 import "./App.css";
@@ -46,6 +47,7 @@ function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} /> {/* ✅ eklendi */}
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/product/:id" element={<ProductDetailPage />} />
 
@@ -91,7 +93,6 @@ function App() {
                       }
                     />
 
-                    {/* ✅ Admin panel route'u */}
                     <Route
                       path="/admin"
                       element={

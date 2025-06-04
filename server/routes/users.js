@@ -9,7 +9,8 @@ const userController = require("../controllers/userController");
 
 const {
   getProfile,
-  updateProfile
+  updateProfile,
+  changePassword 
 } = userController;
 
 // 👤 Kullanıcı kendi profilini görüntüler
@@ -17,5 +18,8 @@ router.get("/profile", verifyToken, getProfile);
 
 // 👤 Kullanıcı profilini günceller (email, phone, address)
 router.put("/profile", verifyToken, updateProfile);
+
+router.put("/change-password", verifyToken, changePassword);
+
 
 module.exports = router;
