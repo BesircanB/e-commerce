@@ -18,7 +18,8 @@ const {
   getCart,
   updateCartItem,
   deleteCartItem,
-  applyCouponToCart   
+  applyCouponToCart,
+  clearCart 
 } = cartController;
 
 // Tüm cart rotaları için JWT doğrulama
@@ -41,6 +42,9 @@ if (typeof deleteCartItem !== 'function') console.error("HATA: deleteCartItem bi
 router.delete("/:id", deleteCartItem);
 
 router.post("/apply-coupon",applyCouponToCart);
+
+router.delete("/", clearCart); // sepeti direkt sil
+
 
 
 module.exports = router;

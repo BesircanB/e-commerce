@@ -1,6 +1,7 @@
 const supabase = require("../services/supabase");
 
 // GET /api/products/:product_id/reviews → Ürüne ait yorumları getir
+
 const getReviewsByProductId = async (req, res) => {
   const productId = Number(req.params.product_id);
   if (isNaN(productId)) {
@@ -10,17 +11,37 @@ const getReviewsByProductId = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("reviews")
-      .select("id, user_id, rating, comment, photo_url, created_at")
+      .select(`
+        id,
+        user_id,
+        rating,
+        comment,
+        photo_url,
+        created_at,
+        users (
+          name
+        )
+      `)
       .eq("product_id", productId)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return res.status(200).json(data);
+
+    // Fallback: Eğer users.name boşsa, "Kullanıcı" olarak ata
+    const enriched = data.map(r => ({
+      ...r,
+      users: {
+        name: r.users?.name?.trim() || "Kullanıcı"
+      }
+    }));
+
+    return res.status(200).json(enriched);
   } catch (err) {
     console.error("getReviewsByProductId error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 // POST /api/products/:product_id/reviews → Yeni yorum oluştur
 const createReview = async (req, res) => {
@@ -171,9 +192,47 @@ const deleteReview = async (req, res) => {
   }
 };
 
+// GET /api/users/me/reviews → Kullanıcının tüm yorumları (ürün bilgisiyle birlikte)
+const getUserReviews = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(`
+        id,
+        rating,
+        comment,
+        photo_url,
+        created_at,
+        product_id,
+        crud (
+          name,
+          image_url
+        )
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { descending: true });
+
+    if (error) throw error;
+
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("getUserReviews error:", err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+
+
+
 module.exports = {
   getReviewsByProductId,
   createReview,
   updateReview,
-  deleteReview
+  deleteReview,
+  getUserReviews 
+
 };

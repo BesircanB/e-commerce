@@ -103,11 +103,16 @@ const applyCouponToCart = async (req, res) => {
     // 3. Toplam fiyat hesapla
     let total = 0;
     for (const item of cartItems) {
+
+
+
       const product = products.find(p => p.id === item.product_id);
       if (product) {
         total += product.price * item.quantity;
       }
     }
+
+
 
     const now = new Date().toISOString();
     let autoDiscountTotal = 0;
@@ -191,16 +196,24 @@ const applyCouponToCart = async (req, res) => {
     const totalDiscount = autoDiscountTotal + codeDiscount;
     const finalTotal = Math.max(total - totalDiscount, 0);
 
+      const enrichedItems = cartItems.map(item => {
+        const product = products.find(p => p.id === item.product_id);
+          return {
+            ...item,
+          product: product || null
+          };
+      });
+
     // 7. Cevap
     return res.status(200).json({
-      message: "İndirim(ler) başarıyla uygulandı",
-      original_total: total,
-      discounts: {
+        items: enrichedItems,
+        original_total: total,
+        discounts: {
         auto: autoDiscounts,
         code: codeDiscountInfo
-      },
-      total_discount: totalDiscount,
-      final_total: finalTotal
+        },
+        total_discount: totalDiscount,
+        final_total: finalTotal
     });
   } catch (err) {
     console.error("applyCouponToCart error:", err);
@@ -214,36 +227,38 @@ const getCart = async (req, res) => {
   const user_id = req.user.id;
 
   try {
-    // Sepet verilerini al
+    // 1. Sepet verilerini al
     const { data: cartItems, error } = await supabaseAdmin
       .from("cart")
       .select("id, product_id, quantity, created_at, coupon_code")
-      .eq("user_id", user_id);
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: true }); // ← ilk eklenen ürün en üstte
+
 
     if (error) throw error;
     if (!cartItems || cartItems.length === 0) {
       return res.status(200).json({ items: [], message: "Sepet boş" });
     }
 
-    // Ürün fiyatlarını al
+    // 2. Ürün bilgilerini al
     const productIds = cartItems.map(item => item.product_id);
     const { data: products, error: prodErr } = await supabase
       .from("crud")
-      .select("id, price")
+      .select("id, name, price, image_url")
       .in("id", productIds);
 
     if (prodErr) throw prodErr;
 
-    // Toplam fiyatı hesapla
+    // 3. Toplam fiyatı hesapla
     let total = 0;
     for (const item of cartItems) {
       const product = products.find(p => p.id === item.product_id);
-      if (product) total += product.price * item.quantity;
+      if (product) total += Number(product.price) * item.quantity;
     }
 
     const now = new Date().toISOString();
 
-    // 🔹 Otomatik kampanyaları uygula
+    // 4. Otomatik kampanyalar
     const { data: autoCampaigns, error: autoErr } = await supabase
       .from("campaigns")
       .select("title, discount_type, discount_value, min_order_amount")
@@ -270,7 +285,7 @@ const getCart = async (req, res) => {
       }
     }
 
-    // 🔹 Kupon varsa uygula
+    // 5. Kupon kodu
     const couponCode = cartItems[0].coupon_code;
     let codeDiscount = 0;
     let codeDiscountInfo = null;
@@ -303,13 +318,22 @@ const getCart = async (req, res) => {
       }
     }
 
-    // 🔹 Toplam indirim ve final toplam
+    // 6. Ürün bilgilerini sepet öğelerine ekle
+    const enrichedItems = cartItems.map(item => {
+      const product = products.find(p => p.id === item.product_id);
+      return {
+        ...item,
+        product: product || null
+      };
+    });
+
+    // 7. Final toplam
     const totalDiscount = autoDiscountTotal + codeDiscount;
     const finalTotal = Math.max(total - totalDiscount, 0);
 
     // ✅ Cevap
     return res.status(200).json({
-      items: cartItems,
+      items: enrichedItems,
       original_total: total,
       discounts: {
         auto: autoDiscounts,
@@ -325,17 +349,18 @@ const getCart = async (req, res) => {
 };
 
 
+
 // Sepet öğesini sil
 const deleteCartItem = async (req, res) => {
   const user_id = req.user.id;
-  const id = Number(req.params.id);
+  const id = Number(req.params.id); // ← bu id sepet satırının id’sidir
 
   if (isNaN(id)) {
     return res.status(400).json({ error: "Geçersiz ID" });
   }
 
   try {
-    // Sepet öğesini kullanıcıya göre bul
+    // Sepet satırının var olup olmadığını kontrol et
     const { data: existing, error: fetchError } = await supabaseAdmin
       .from("cart")
       .select("id")
@@ -348,12 +373,12 @@ const deleteCartItem = async (req, res) => {
       return res.status(404).json({ error: "Sepet öğesi bulunamadı" });
     }
 
-    // Sil
+    // 🔧 SADECE O satırı sil
     const { error: deleteError } = await supabaseAdmin
       .from("cart")
       .delete()
-      .eq("user_id",user_id);
-      
+      .eq("id", id)
+      .eq("user_id", user_id);
 
     if (deleteError) throw deleteError;
 
@@ -407,6 +432,25 @@ const updateCartItem = async (req, res) => {
 };
 
 
+const clearCart = async (req, res) => {
+  const user_id = req.user.id;
+  try {
+    const { error } = await supabaseAdmin
+      .from("cart")
+      .delete()
+      .eq("user_id", user_id);
+
+    if (error) throw error;
+
+    return res.status(200).json({ message: "Sepet temizlendi" });
+  } catch (err) {
+    console.error("Cart clear error:", err);
+    return res.status(400).json({ error: err.message });
+  }
+};
+
+
+
 
 
 
@@ -419,5 +463,6 @@ module.exports = {
   getCart,
   deleteCartItem,
   updateCartItem,
-  applyCouponToCart 
+  applyCouponToCart,
+  clearCart
 };

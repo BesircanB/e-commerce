@@ -1,113 +1,157 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { campaigns } from "../models/campaigns"; // 👈 Kampanya verisi
+import axios from "../services/axiosInstance";
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    const stored = localStorage.getItem("cart");
-    return stored ? JSON.parse(stored) : [];
-  });
+  const { token } = useAuth();
 
-  const [appliedCampaign, setAppliedCampaign] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
+  const [campaigns, setCampaigns] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
+  // Sepeti sunucudan getir
+  const getCart = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get("/cart", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const addToCart = (product) => {
-    setCartItems((prev) => {
-      const exists = prev.find((item) => item.id === product.id);
-      if (exists) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
+      setCartItems(res.data.items || []);
+      setCampaigns(res.data.discounts || null);
+      setTotal(res.data.final_total || 0);
+    } catch (err) {
+      console.error("Sepet alınamadı:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const increaseQuantity = (id) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-      )
+  const addToCart = async (productId) => {
+    if (!token) return;
+    try {
+      await axios.post(
+        "/cart",
+        { product_id: productId, quantity: 1 },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      await getCart();
+    } catch (err) {
+      console.error("Ürün sepete eklenemedi:", err);
+    }
+  };
+
+const increaseQuantity = async (cartItemId) => {
+  if (!token) return;
+  try {
+    const item = cartItems.find((item) => item.id === cartItemId);
+    if (!item) return;
+
+    await axios.put(
+      `/cart/${cartItemId}`,
+      { quantity: item.quantity + 1 },
+      { headers: { Authorization: `Bearer ${token}` } }
     );
+    await getCart();
+  } catch (err) {
+    console.error("Adet artırılamadı:", err);
+  }
+};
+
+const decreaseQuantity = async (cartItemId) => {
+  if (!token) return;
+  try {
+    const item = cartItems.find((item) => item.id === cartItemId);
+    if (!item) return;
+
+    if (item.quantity === 1) {
+      // 1 ise ürünü sepetten tamamen sil
+      await removeFromCart(cartItemId);
+    } else {
+      // değilse sadece adetini azalt
+      await axios.put(
+        `/cart/${cartItemId}`,
+        { quantity: item.quantity - 1 },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    }
+
+    await getCart();
+  } catch (err) {
+    console.error("Adet azaltılamadı:", err);
+  }
+};
+
+
+  const removeFromCart = async (productId) => {
+    if (!token) return;
+    try {
+      await axios.delete(`/cart/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await getCart();
+    } catch (err) {
+      console.error("Ürün sepetten silinemedi:", err);
+    }
   };
 
-  const decreaseQuantity = (id) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+  const clearCart = async () => {
+    if (!token) return;
+    try {
+      await axios.delete("/cart", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await getCart();
+    } catch (err) {
+      console.error("Sepet temizlenemedi:", err);
+    }
   };
 
-  const removeFromCart = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const clearCart = () => {
-    setCartItems([]);
-    setAppliedCampaign(null); // Sepet temizlenince kampanya da kalksın
-  };
-
-  // 🎯 Kampanya uygulama
-  const applyCampaign = (code) => {
-    const total = getCartTotal();
-    const campaign = campaigns.find(
-      (c) => c.code === code.toUpperCase()
-    );
-    if (!campaign) return { success: false, message: "Kupon kodu geçersiz" };
-
-    if (campaign.minTotal && total < campaign.minTotal) {
+  const applyCampaign = async (code) => {
+    if (!token) return { success: false, message: "Giriş yapmalısınız" };
+    try {
+      const res = await axios.post(
+        "/cart/apply-coupon",
+        { code },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await getCart();
+      return { success: true };
+    } catch (err) {
+      console.error("Kampanya uygulanamadı:", err);
       return {
         success: false,
-        message: `Bu kampanya için minimum ${campaign.minTotal}₺ harcama gerekir.`,
+        message:
+          err.response?.data?.error || "Kampanya kodu geçerli değil",
       };
     }
-
-    setAppliedCampaign(campaign);
-    return { success: true };
   };
 
-  const getCartTotal = () => {
-    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  };
-
-  const getDiscountedTotal = () => {
-    let total = getCartTotal();
-
-    if (appliedCampaign) {
-      if (appliedCampaign.type === "percentage") {
-        total = total * (1 - appliedCampaign.amount / 100);
-      } else if (appliedCampaign.type === "fixed") {
-        total = total - appliedCampaign.amount;
-      }
-    }
-
-    return Math.max(total, 0); // eksi olmasın
-  };
+  useEffect(() => {
+    getCart();
+  }, [token]);
 
   return (
     <CartContext.Provider
       value={{
         cartItems,
+        campaigns,
+        total,
+        loading,
+        getCart,
         addToCart,
-        removeFromCart,
-        clearCart,
         increaseQuantity,
         decreaseQuantity,
+        removeFromCart,
+        clearCart,
         applyCampaign,
-        appliedCampaign,
-        getCartTotal,
-        getDiscountedTotal,
       }}
     >
       {children}

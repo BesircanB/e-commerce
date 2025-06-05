@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import { useOrders } from "../context/OrderContext";
 
 const OrdersPage = () => {
-  const { orders } = useOrders();
+  const { orders, cancelOrder } = useOrders();
 
   return (
     <div>
@@ -14,9 +14,9 @@ const OrdersPage = () => {
         {orders.length === 0 ? (
           <p>Henüz bir siparişiniz bulunmamaktadır.</p>
         ) : (
-          orders.map((order, index) => (
+          orders.map((order) => (
             <div
-              key={index}
+              key={order.id}
               style={{
                 border: "1px solid #ccc",
                 padding: "1rem",
@@ -24,19 +24,37 @@ const OrdersPage = () => {
                 borderRadius: "6px",
               }}
             >
-              <p><strong>Sipariş Tarihi:</strong> {new Date(order.date).toLocaleString()}</p>
-              <p><strong>Toplam:</strong> {order.total.toFixed(2)} ₺</p>
-              <p><strong>Adres:</strong> {order.address}</p>
-              <p><strong>Telefon:</strong> {order.phone}</p>
+              <p><strong>Sipariş ID:</strong> {order.id}</p>
+              <p><strong>Tarih:</strong> {new Date(order.created_at).toLocaleString()}</p>
+              <p><strong>Toplam:</strong> {order.total_amount.toFixed(2)} ₺</p>
+              <p><strong>Durum:</strong> {order.status}</p>
 
               <h4>Ürünler:</h4>
               <ul>
-                {order.items.map((item) => (
+                {order.order_items.map((item) => (
                   <li key={item.id}>
-                    {item.title} × {item.quantity} = {(item.price * item.quantity).toFixed(2)} ₺
+                    {item.product?.name || "Ürün yok"} × {item.quantity} ={" "}
+                    {(item.unit_price * item.quantity).toFixed(2)} ₺
                   </li>
                 ))}
               </ul>
+
+              {["pending", "paid"].includes(order.status) && (
+                <button
+                  onClick={() => cancelOrder(order.id)}
+                  style={{
+                    marginTop: "1rem",
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    padding: "0.5rem 1rem",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Siparişi İptal Et
+                </button>
+              )}
             </div>
           ))
         )}

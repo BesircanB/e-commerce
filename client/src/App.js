@@ -6,7 +6,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage"; // ✅ eklendi
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import CartPage from "./pages/CartPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -14,6 +14,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
 import AdminPage from "./pages/AdminPage";
+import MyReviewsPage from "./pages/MyReviewsPage"; // ✅ eklendi
 
 // Modal
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -47,7 +48,7 @@ function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} /> {/* ✅ eklendi */}
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/product/:id" element={<ProductDetailPage />} />
 
@@ -57,6 +58,14 @@ function App() {
                       element={
                         <PrivateRoute>
                           <ProfilePage />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile/my-reviews"
+                      element={
+                        <PrivateRoute>
+                          <MyReviewsPage />
                         </PrivateRoute>
                       }
                     />

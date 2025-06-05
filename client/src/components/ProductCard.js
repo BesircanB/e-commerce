@@ -41,12 +41,12 @@ const ProductCard = ({ product }) => {
         to={`/product/${product.id}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
-        <img src={product.image} alt={product.title} />
-        <h3>{product.title}</h3>
+        <img src={product.image} alt={product.name} />
+        <h3>{product.name}</h3>
         <p>{product.price.toFixed(2)} ₺</p>
       </Link>
 
-      <button onClick={() => addToCart(product)}>Sepete Ekle</button>
+      <button onClick={() => addToCart(product.id)}>Sepete Ekle</button>
     </div>
   );
 };

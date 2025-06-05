@@ -8,7 +8,8 @@ const {
   getReviewsByProductId,
   createReview,
   updateReview,
-  deleteReview
+  deleteReview,
+  getUserReviews
 } = require("../controllers/reviewController");
 
 // ✅ Public: Bir ürünün yorumlarını getir
@@ -22,5 +23,9 @@ router.put("/products/:product_id/reviews/:id", verifyToken, updateReview);
 
 // ✅ Kullanıcı: Yorum sil
 router.delete("/products/:product_id/reviews/:id", verifyToken, deleteReview);
+
+// ✅ Kullanıcı: Tüm yorum geçmişini getir
+router.get("/users/me/reviews", verifyToken, getUserReviews);
+
 
 module.exports = router;

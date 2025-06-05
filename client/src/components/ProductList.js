@@ -2,32 +2,49 @@ import React, { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import "./ProductList.css";
 import { useSearch } from "../context/SearchContext";
-import mockProducts from "../models/mockProducts";
+import axios from "../services/axiosInstance";
 
 const ProductList = () => {
   const { searchTerm } = useSearch();
+
   const [products, setProducts] = useState([]);
-  const [category, setCategory] = useState("Tümü");
+  const [categoryList, setCategoryList] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [sortOption, setSortOption] = useState("Varsayılan");
 
+  // Ürünleri çek
   useEffect(() => {
-    const stored = localStorage.getItem("admin_products");
-    const adminProducts = stored ? JSON.parse(stored) : [];
-    const visibleAdmin = adminProducts.filter((p) => p.visible);
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("/products");
+        setProducts(response.data.data || []);
+      } catch (err) {
+        console.error("Ürünler alınamadı:", err);
+        setProducts([]);
+      }
+    };
+    fetchProducts();
+  }, []);
 
-    const merged = [...mockProducts, ...visibleAdmin];
-    setProducts(merged);
+  // Kategorileri çek
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("/categories");
+        setCategoryList(response.data || []);
+      } catch (err) {
+        console.error("Kategoriler alınamadı:", err);
+        setCategoryList([]);
+      }
+    };
+    fetchCategories();
   }, []);
 
   const filtered = products
-    .filter((p) =>
-      category === "Tümü" ? true : p.category === category
-    )
-    .filter((p) =>
-      p.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((p) => selectedCategoryId === null || p.category_id === selectedCategoryId)
+    .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((p) => p.price >= minPrice && p.price <= maxPrice)
     .sort((a, b) => {
       if (sortOption === "Artan") return a.price - b.price;
@@ -35,28 +52,41 @@ const ProductList = () => {
       return 0;
     });
 
-  const categories = ["Tümü", ...new Set(products.map((p) => p.category))];
-
   return (
     <div style={{ padding: "1rem" }}>
+      {/* Kategori Butonları */}
       <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
-        {categories.map((cat) => (
+        <button
+          key="Tümü"
+          onClick={() => setSelectedCategoryId(null)}
+          style={{
+            padding: "0.3rem 0.7rem",
+            borderRadius: "5px",
+            border: selectedCategoryId === null ? "2px solid green" : "1px solid #ccc",
+            background: selectedCategoryId === null ? "#e1f8e8" : "#fff",
+            cursor: "pointer",
+          }}
+        >
+          Tümü
+        </button>
+        {categoryList.map((c) => (
           <button
-            key={cat}
-            onClick={() => setCategory(cat)}
+            key={c.id}
+            onClick={() => setSelectedCategoryId(c.id)}
             style={{
               padding: "0.3rem 0.7rem",
               borderRadius: "5px",
-              border: category === cat ? "2px solid green" : "1px solid #ccc",
-              background: category === cat ? "#e1f8e8" : "#fff",
+              border: selectedCategoryId === c.id ? "2px solid green" : "1px solid #ccc",
+              background: selectedCategoryId === c.id ? "#e1f8e8" : "#fff",
               cursor: "pointer",
             }}
           >
-            {cat}
+            {c.name}
           </button>
         ))}
       </div>
 
+      {/* Filtreleme Paneli */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <input
           type="number"
@@ -79,13 +109,14 @@ const ProductList = () => {
           <option>Azalan</option>
         </select>
         <button onClick={() => {
-          setCategory("Tümü");
+          setSelectedCategoryId(null);
           setMinPrice(0);
           setMaxPrice(10000);
           setSortOption("Varsayılan");
         }}>Filtreleri Temizle</button>
       </div>
 
+      {/* Ürünler */}
       <div className="product-grid">
         {filtered.length > 0 ? (
           filtered.map((product) => (

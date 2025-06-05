@@ -91,6 +91,7 @@ const ProfilePage = () => {
               <button onClick={toggleEdit}>Profili Düzenle</button>
               <button onClick={() => navigate("/change-password")}>Şifre Değiştir</button>
               <button onClick={() => navigate("/orders")}>Siparişlerim</button>
+              <button onClick={() => navigate("/profile/my-reviews")}>Yorumlarım</button> {/* ✅ eklendi */}
             </div>
           </div>
         )}

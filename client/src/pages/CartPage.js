@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useOrders } from "../context/OrderContext";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 
@@ -11,24 +12,40 @@ const CartPage = () => {
     increaseQuantity,
     decreaseQuantity,
     applyCampaign,
-    appliedCampaign,
-    getCartTotal,
-    getDiscountedTotal,
+    campaigns,
+    total,
   } = useCart();
 
+  const { placeOrder } = useOrders();
   const navigate = useNavigate();
-
   const [couponCode, setCouponCode] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleApplyCoupon = () => {
-    const result = applyCampaign(couponCode);
+  const handleApplyCoupon = async () => {
+    const result = await applyCampaign(couponCode);
     if (result.success) {
       setMessage("✅ Kupon başarıyla uygulandı.");
     } else {
       setMessage("❌ " + result.message);
     }
   };
+
+  const handlePlaceOrder = async () => {
+    setLoading(true);
+    const result = await placeOrder();
+    setLoading(false);
+    if (result.success) {
+      navigate("/orders");
+    } else {
+      alert("Sipariş oluşturulamadı: " + result.message);
+    }
+  };
+
+  const originalTotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
 
   return (
     <div>
@@ -54,10 +71,10 @@ const CartPage = () => {
                   }}
                 >
                   <div>
-                    <strong>{item.title}</strong>
+                    <strong>{item.product.name}</strong>
                     <p>
-                      {item.price} ₺ x {item.quantity} ={" "}
-                      {(item.price * item.quantity).toFixed(2)} ₺
+                      {item.product.price} ₺ x {item.quantity} ={" "}
+                      {(item.product.price * item.quantity).toFixed(2)} ₺
                     </p>
 
                     <div>
@@ -71,7 +88,7 @@ const CartPage = () => {
               ))}
             </ul>
 
-            {/* 🧾 Kampanya kodu giriş alanı */}
+            {/* 🧾 Kampanya kodu */}
             <div style={{ marginTop: "2rem" }}>
               <input
                 type="text"
@@ -82,26 +99,37 @@ const CartPage = () => {
               />
               <button onClick={handleApplyCoupon}>Uygula</button>
               {message && <p>{message}</p>}
-              {appliedCampaign && (
-                <p style={{ color: "green" }}>
-                  ✔ Uygulanan Kampanya: <strong>{appliedCampaign.code}</strong> (
-                  {appliedCampaign.type === "percentage"
-                    ? `%${appliedCampaign.amount}`
-                    : `${appliedCampaign.amount}₺ indirim`}
-                  )
-                </p>
-              )}
             </div>
 
-            {/* 💰 Toplamlar */}
+            {/* 🎁 Uygulanan Kampanyalar */}
+            {campaigns && (
+              <div style={{ marginTop: "1rem" }}>
+                {campaigns.auto?.length > 0 && (
+                  <>
+                    <h4>Otomatik Kampanyalar:</h4>
+                    <ul>
+                      {campaigns.auto.map((camp, index) => (
+                        <li key={index}>
+                          {camp.title} - {camp.amount.toFixed(2)} ₺
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {campaigns.code && (
+                  <p>
+                    ✔ Kupon: <strong>{campaigns.code.code}</strong> –{" "}
+                    {campaigns.code.amount.toFixed(2)} ₺
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* 💰 Toplam */}
             <div style={{ marginTop: "2rem", fontWeight: "bold" }}>
-              <p>Ara Toplam: {getCartTotal().toFixed(2)} ₺</p>
-              {appliedCampaign && (
-                <p>İndirimli Toplam: {getDiscountedTotal().toFixed(2)} ₺</p>
-              )}
-              {!appliedCampaign && (
-                <p>Toplam: {getCartTotal().toFixed(2)} ₺</p>
-              )}
+              <p>Ara Toplam: {originalTotal.toFixed(2)} ₺</p>
+              <p>İndirimli Toplam: {total.toFixed(2)} ₺</p>
             </div>
 
             <button onClick={clearCart} style={{ marginTop: "1rem" }}>
@@ -109,7 +137,8 @@ const CartPage = () => {
             </button>
 
             <button
-              onClick={() => navigate("/checkout")}
+              onClick={handlePlaceOrder}
+              disabled={loading}
               style={{
                 marginTop: "1rem",
                 backgroundColor: "#28a745",
@@ -120,7 +149,7 @@ const CartPage = () => {
                 cursor: "pointer",
               }}
             >
-              Siparişi Tamamla
+              {loading ? "Sipariş oluşturuluyor..." : "Siparişi Tamamla"}
             </button>
           </>
         )}
