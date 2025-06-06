@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
+import Modal from "../Modal";
+import { useCategories } from "../../context/CategoryContext"; // ✅ eklendi
 
 const EditProductModal = ({ product, onSave, onClose }) => {
-  const [form, setForm] = useState(product);
+  const { categories } = useCategories(); // ✅ kategori listesi context'ten
+  const [formData, setFormData] = useState({ ...product });
 
   useEffect(() => {
-    setForm(product);
+    setFormData({ ...product });
   }, [product]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
@@ -17,64 +20,85 @@ const EditProductModal = ({ product, onSave, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const updated = {
-      ...form,
-      price: parseFloat(form.price), // 🔥 price artık her zaman sayı olacak
-    };
-
-    onSave(updated);
-    onClose();
+    onSave({
+      ...formData,
+      price: parseFloat(formData.price),
+      stock: parseInt(formData.stock),
+      category_id: Number(formData.category_id),
+    });
   };
 
-  if (!product) return null;
-
   return (
-    <div style={{
-      position: "fixed",
-      top: 0, left: 0,
-      width: "100%", height: "100%",
-      background: "rgba(0,0,0,0.4)",
-      display: "flex", alignItems: "center", justifyContent: "center"
-    }}>
-      <form onSubmit={handleSubmit} style={{
-        background: "#fff",
-        padding: "2rem",
-        borderRadius: "8px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-        width: "400px"
-      }}>
-        <h3>Ürünü Düzenle</h3>
+    <Modal onClose={onClose}>
+      <h2>Ürünü Düzenle</h2>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <input
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Ürün Adı"
+          required
+        />
+        <input
+          name="price"
+          value={formData.price}
+          onChange={handleChange}
+          placeholder="Fiyat"
+          type="number"
+          required
+        />
+        <input
+          name="image"
+          value={formData.image}
+          onChange={handleChange}
+          placeholder="Görsel URL"
+        />
+        <input
+          name="stock"
+          value={formData.stock}
+          onChange={handleChange}
+          placeholder="Stok"
+          type="number"
+          min="0"
+        />
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          placeholder="Açıklama"
+        />
 
-        <input name="title" value={form.title} onChange={handleChange} placeholder="Ürün Adı" />
-        <input name="price" value={form.price} onChange={handleChange} placeholder="Fiyat" type="number" />
-        <input name="image" value={form.image} onChange={handleChange} placeholder="Görsel URL" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Açıklama" />
-
-        <select name="category" value={form.category} onChange={handleChange}>
-          <option value="Giyim">Giyim</option>
-          <option value="Ayakkabı">Ayakkabı</option>
-          <option value="Elektronik">Elektronik</option>
+        {/* ✅ Kategori seçimi dropdown */}
+        <select
+          name="category_id"
+          value={formData.category_id}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Kategori Seç</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
         </select>
 
         <label>
           <input
             type="checkbox"
             name="visible"
-            checked={form.visible}
+            checked={formData.visible}
             onChange={handleChange}
           />
-          Kayıtlı kullanıcıya göster
+          Kullanıcıya Göster
         </label>
 
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
           <button type="submit">Kaydet</button>
           <button type="button" onClick={onClose}>İptal</button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 };
 

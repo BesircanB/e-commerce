@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
+import { useCategories } from "../context/CategoryContext";
 import axios from "../services/axiosInstance";
 import Header from "../components/Header";
 import ProductReviews from "../components/ProductReviews";
@@ -12,6 +13,7 @@ const ProductDetailPage = () => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
+  const { categories } = useCategories();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,10 @@ const ProductDetailPage = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`/products/${id}`);
+        const endpoint = user?.role === "admin"
+          ? `/products/admin/${id}`
+          : `/products/${id}`;
+        const res = await axios.get(endpoint);
         setProduct(res.data);
       } catch (err) {
         console.error("Ürün alınamadı:", err);
@@ -30,7 +35,7 @@ const ProductDetailPage = () => {
       }
     };
     fetchProduct();
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     const checkIfPurchased = async () => {
@@ -78,6 +83,9 @@ const ProductDetailPage = () => {
       : addToWishlist(product);
   };
 
+  const category = categories.find((c) => c.id === product.category_id);
+  const categoryName = category ? category.name : "—";
+
   return (
     <div>
       <Header />
@@ -108,9 +116,9 @@ const ProductDetailPage = () => {
             </button>
           </div>
 
+          <p><strong>Kategori:</strong> {categoryName}</p>
           <p>{product.description || "Ürün açıklaması mevcut değil."}</p>
           <h3>{product.price.toFixed(2)} ₺</h3>
-          {/* ✅ Stok etiketi kontrolü */}
           {product.stock <= 0 ? (
             <p style={{ color: "red", fontWeight: "bold" }}>Tükendi</p>
           ) : (
@@ -124,24 +132,24 @@ const ProductDetailPage = () => {
           )}
 
           <button
-          onClick={() => addToCart(product.id)}
-          disabled={product.stock <= 0}
-          style={{
-            backgroundColor: product.stock <= 0 ? "#ccc" : "#28a745",
-            color: product.stock <= 0 ? "#666" : "white",
-            padding: "0.5rem 1rem",
-            border: "none",
-            borderRadius: "4px",
-            cursor: product.stock <= 0 ? "not-allowed" : "pointer",
-            marginTop: "1rem",
-          }}
-            >
-              {product.stock <= 0 ? "Stokta Yok" : "Sepete Ekle"}
+            onClick={() => addToCart(product.id)}
+            disabled={product.stock <= 0}
+            style={{
+              backgroundColor: product.stock <= 0 ? "#ccc" : "#28a745",
+              color: product.stock <= 0 ? "#666" : "white",
+              padding: "0.5rem 1rem",
+              border: "none",
+              borderRadius: "4px",
+              cursor: product.stock <= 0 ? "not-allowed" : "pointer",
+              marginTop: "1rem",
+            }}
+          >
+            {product.stock <= 0 ? "Stokta Yok" : "Sepete Ekle"}
           </button>
         </div>
       </div>
 
-      {/* Ürün görselini büyütme modalı */}
+      {/* Görseli büyütme modalı */}
       {isImageModalOpen && (
         <div
           onClick={() => setImageModalOpen(false)}

@@ -1,91 +1,84 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useSearch } from "../context/SearchContext";
-import { useCart } from "../context/CartContext";
-import "./Header.css";
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const { searchTerm, setSearchTerm } = useSearch();
-  const { cartItems } = useCart();
-
-  const totalQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <header className="header">
-      <div className="header-left">
-        <Link to="/" className="header-logo">E-Ticaret</Link>
-      </div>
+    <header
+      style={{
+        background: "#222",
+        color: "white",
+        padding: "1rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap",
+      }}
+    >
+      <Link to="/" style={{ color: "white", textDecoration: "none", fontSize: "1.5rem" }}>
+        E-Ticaret
+      </Link>
 
-      <div className="header-center">
-        <input
-          type="text"
-          placeholder="Ürün ara..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button>🔍</button>
-      </div>
-
-      <div className="header-right">
+      <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
         {user?.role === "admin" ? (
           <>
-            <Link to="/admin" className="action-item">
-              <span className="icon">🛠️</span>
-              <span className="label">Ürünler</span>
+            <Link to="/admin" className="action-item" style={{ color: "white" }}>
+              🛠️ Ürünler
             </Link>
 
-            <Link to="/admin/orders" className="action-item">
-              <span className="icon">📊</span>
-              <span className="label">Muhasebe</span>
+            <Link to="/admin/campaigns" className="action-item" style={{ color: "white" }}>
+              🎯 Kampanyalar
             </Link>
 
-            <Link to="/profile" className="action-item">
-              <span className="icon">👤</span>
-              <span className="label">Profil</span>
+            <Link to="/admin/orders" className="action-item" style={{ color: "white" }}>
+              📦 Siparişler
             </Link>
 
-            <button onClick={logout} className="action-item logout-btn">
-              <span className="icon">🚪</span>
-              <span className="label">Çıkış</span>
+            <Link to="/admin/stats" className="action-item" style={{ color: "white" }}>
+              📊 İstatistikler
+            </Link>
+
+            <Link to="/profile" className="action-item" style={{ color: "white" }}>
+              👤 Profil
+            </Link>
+
+            <button
+              onClick={logout}
+              className="action-item logout-btn"
+              style={{
+                background: "none",
+                border: "none",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              🚪 Çıkış
+            </button>
+          </>
+        ) : user ? (
+          <>
+            <Link to="/cart" style={{ color: "white" }}>🛒 Sepetim</Link>
+            <Link to="/wishlist" style={{ color: "white" }}>🤍 Favoriler</Link>
+            <Link to="/orders" style={{ color: "white" }}>📦 Siparişler</Link>
+            <Link to="/profile" style={{ color: "white" }}>👤 Profil</Link>
+            <button
+              onClick={logout}
+              style={{
+                background: "none",
+                border: "none",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              🚪 Çıkış
             </button>
           </>
         ) : (
           <>
-            {user && (
-              <Link to="/profile" className="action-item">
-                <span className="icon">👤</span>
-                <span className="label">Profil</span>
-              </Link>
-            )}
-
-            {user && (
-              <Link to="/wishlist" className="action-item">
-                <span className="icon">💖</span>
-                <span className="label">Favoriler</span>
-              </Link>
-            )}
-
-            <Link to="/cart" className="action-item cart-icon">
-              <span className="icon">🛒</span>
-              <span className="label">Sepet</span>
-              {totalQuantity > 0 && (
-                <span className="cart-count">{totalQuantity}</span>
-              )}
-            </Link>
-
-            {user ? (
-              <button onClick={logout} className="action-item logout-btn">
-                <span className="icon">🚪</span>
-                <span className="label">Çıkış</span>
-              </button>
-            ) : (
-              <Link to="/login" className="action-item">
-                <span className="icon">👤</span>
-                <span className="label">Giriş Yap</span>
-              </Link>
-            )}
+            <Link to="/login" style={{ color: "white" }}>Giriş</Link>
+            <Link to="/register" style={{ color: "white" }}>Kayıt Ol</Link>
           </>
         )}
       </div>

@@ -67,7 +67,7 @@ const getAllProductsAdmin = async (req, res) => {
   try {
     const { data, error, count } = await supabase
       .from("crud")
-      .select("*", { count: "exact" })
+      .select("*, categories(name)", { count: "exact" })
       .order("created_at", { ascending: false });
 
     if (error) throw error;

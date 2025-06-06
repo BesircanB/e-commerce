@@ -1,81 +1,154 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Header from "../components/Header";
 import ProductForm from "../components/admin/ProductForm";
-import ProductList from "../components/admin/ProductList";
 import EditProductModal from "../components/admin/EditProductModal";
+import { useAdmin } from "../context/AdminContext";
+import { useCategories } from "../context/CategoryContext"; // ✅ eklendi
+import { useSearch } from "../context/SearchContext";
+import ProductCard from "../components/ProductCard";
+import CategoryManager from "../components/admin/CategoryManager"; // ✅ eklendi
 
 const AdminPage = () => {
-  const [products, setProducts] = useState([]);
+  const {
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    toggleVisibility,
+  } = useAdmin();
+
+  const { categories: categoryList } = useCategories(); // ✅ tüm kategori verileri
+  const { searchTerm } = useSearch();
+
   const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(10000);
+  const [sortOption, setSortOption] = useState("Varsayılan");
 
-  useEffect(() => {
-    const stored = localStorage.getItem("admin_products");
-    try {
-      const parsed = stored ? JSON.parse(stored) : [];
-      setProducts(parsed);
-    } catch (err) {
-      console.error("admin_products JSON parse hatası:", err);
-      setProducts([]);
-    }
-  }, []);
+  const filtered = products
+    .filter((p) => selectedCategoryId === null || p.category_id === selectedCategoryId)
+    .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((p) => p.price >= minPrice && p.price <= maxPrice)
+    .sort((a, b) => {
+      if (sortOption === "Artan") return a.price - b.price;
+      if (sortOption === "Azalan") return b.price - a.price;
+      return 0;
+    });
 
-  useEffect(() => {
-    if (products && products.length > 0) {
-      localStorage.setItem("admin_products", JSON.stringify(products));
-    }
-  }, [products]);
-
-  const handleAddProduct = (formData) => {
-    const newProduct = {
-      id: Date.now(),
-      title: formData.name,
-      price: parseFloat(formData.price),
-      image: formData.image || "https://via.placeholder.com/300x200.png?text=Ürün",
-      description: formData.description,
-      category: formData.category,
-      visible: formData.visible,
-    };
-    setProducts((prev) => [...prev, newProduct]);
+  const handleEditSave = (updatedProduct) => {
+    updateProduct(updatedProduct);
+    setEditingProduct(null);
   };
 
-  const handleDelete = (id) => {
-    const updated = products.filter((p) => p.id !== id);
-    setProducts(updated);
-  };
-
-  const handleToggleVisibility = (id) => {
-    const updated = products.map((p) =>
-      p.id === id ? { ...p, visible: !p.visible } : p
-    );
-    setProducts(updated);
-  };
-
-  const handleEditProduct = (updatedProduct) => {
-    const updated = products.map((p) =>
-      p.id === updatedProduct.id ? updatedProduct : p
-    );
-    setProducts(updated);
-  };
+  const categories = [...new Set(products.map((p) => p.category_id))];
 
   return (
     <>
       <Header />
       <div style={{ padding: "2rem" }}>
         <h2>👮 Admin Panel</h2>
-        <ProductForm onAdd={handleAddProduct} />
+
+        {/* Ürün Ekleme */}
+        <ProductForm onAdd={addProduct} />
+
         <h3>Ürünler</h3>
-        <ProductList
-          products={products}
-          onDelete={handleDelete}
-          onToggleVisibility={handleToggleVisibility}
-          onEdit={(product) => setEditingProduct(product)}
-        />
+
+        {/* Kategori Butonları */}
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+          <button
+            key="Tümü"
+            onClick={() => setSelectedCategoryId(null)}
+            style={{
+              padding: "0.3rem 0.7rem",
+              borderRadius: "5px",
+              border: selectedCategoryId === null ? "2px solid green" : "1px solid #ccc",
+              background: selectedCategoryId === null ? "#e1f8e8" : "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Tümü
+          </button>
+          {categories.map((catId) => {
+            const cat = categoryList.find((c) => c.id === catId);
+            const label = cat ? cat.name : `Kategori ${catId}`;
+            return (
+              <button
+                key={catId}
+                onClick={() => setSelectedCategoryId(catId)}
+                style={{
+                  padding: "0.3rem 0.7rem",
+                  borderRadius: "5px",
+                  border: selectedCategoryId === catId ? "2px solid green" : "1px solid #ccc",
+                  background: selectedCategoryId === catId ? "#e1f8e8" : "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Filtreleme */}
+        <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+          <input
+            type="number"
+            value={minPrice}
+            onChange={(e) => setMinPrice(Number(e.target.value))}
+            placeholder="Min Fiyat"
+          />
+          <input
+            type="number"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(Number(e.target.value))}
+            placeholder="Max Fiyat"
+          />
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+          >
+            <option>Varsayılan</option>
+            <option>Artan</option>
+            <option>Azalan</option>
+          </select>
+          <button onClick={() => {
+            setSelectedCategoryId(null);
+            setMinPrice(0);
+            setMaxPrice(10000);
+            setSortOption("Varsayılan");
+          }}>Filtreleri Temizle</button>
+        </div>
+
+        {/* Ürün Listesi */}
+        <div className="product-grid">
+          {filtered.length > 0 ? (
+            filtered.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onEdit={setEditingProduct}
+                onDelete={deleteProduct}
+                onToggleVisibility={(id) => toggleVisibility(id, product.is_visible)}
+              />
+            ))
+          ) : (
+            <p style={{ gridColumn: "1 / -1", textAlign: "center" }}>
+              Ürün bulunamadı.
+            </p>
+          )}
+        </div>
+
+        {/* Kategori Yönetimi Paneli */}
+        <hr style={{ margin: "3rem 0" }} />
+        <CategoryManager />
       </div>
 
+      {/* Ürün Düzenleme Modalı */}
       {editingProduct && (
         <EditProductModal
           product={editingProduct}
-          onSave={handleEditProduct}
+          onSave={handleEditSave}
           onClose={() => setEditingProduct(null)}
         />
       )}

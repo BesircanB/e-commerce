@@ -1,13 +1,17 @@
 import React, { useState } from "react";
+import { useCategories } from "../../context/CategoryContext"; // ✅ context eklendi
 
 const ProductForm = ({ onAdd }) => {
+  const { categories } = useCategories(); // ✅ context kullanıldı
+
   const [form, setForm] = useState({
     name: "",
     price: "",
     image: "",
     description: "",
-    category: "Giyim", // ✅ varsayılan kategori
-    visible: false,
+    category_id: "",
+    stock: 10,
+    visible: true,
   });
 
   const handleChange = (e) => {
@@ -20,15 +24,28 @@ const ProductForm = ({ onAdd }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.name || !form.price || !form.category) return;
-    onAdd(form);
+    if (!form.name || !form.price) return;
+
+    const payload = {
+      name: form.name,
+      price: parseFloat(form.price),
+      image: form.image,
+      description: form.description,
+      category_id: Number(form.category_id),
+      stock: Number(form.stock),
+      visible: form.visible,
+    };
+
+    onAdd(payload);
+
     setForm({
       name: "",
       price: "",
       image: "",
       description: "",
-      category: "Giyim",
-      visible: false,
+      category_id: "",
+      stock: 10,
+      visible: true,
     });
   };
 
@@ -42,15 +59,55 @@ const ProductForm = ({ onAdd }) => {
         marginBottom: "1rem",
       }}
     >
-      <input name="name" value={form.name} onChange={handleChange} placeholder="Ürün Adı" required />
-      <input name="price" value={form.price} onChange={handleChange} placeholder="Fiyat" type="number" required />
-      <input name="image" value={form.image} onChange={handleChange} placeholder="Görsel URL" />
-      <textarea name="description" value={form.description} onChange={handleChange} placeholder="Açıklama" />
+      <input
+        name="name"
+        value={form.name}
+        onChange={handleChange}
+        placeholder="Ürün Adı"
+        required
+      />
+      <input
+        name="price"
+        value={form.price}
+        onChange={handleChange}
+        placeholder="Fiyat"
+        type="number"
+        required
+      />
+      <input
+        name="image"
+        value={form.image}
+        onChange={handleChange}
+        placeholder="Görsel URL"
+      />
+      <input
+        name="stock"
+        value={form.stock}
+        onChange={handleChange}
+        placeholder="Stok"
+        type="number"
+        min="0"
+      />
+      <textarea
+        name="description"
+        value={form.description}
+        onChange={handleChange}
+        placeholder="Açıklama"
+      />
 
-      <select name="category" value={form.category} onChange={handleChange} required>
-        <option value="Giyim">Giyim</option>
-        <option value="Ayakkabı">Ayakkabı</option>
-        <option value="Elektronik">Elektronik</option>
+      {/* ✅ Kategori Seçimi */}
+      <select
+        name="category_id"
+        value={form.category_id}
+        onChange={handleChange}
+        required
+      >
+        <option value="">Kategori Seç</option>
+        {categories.map((cat) => (
+          <option key={cat.id} value={cat.id}>
+            {cat.name}
+          </option>
+        ))}
       </select>
 
       <label>

@@ -1,5 +1,3 @@
-// server/controllers/categoryController.js
-
 const supabase = require("../services/supabase");
 
 // GET /api/categories → tüm kategorileri getir
@@ -66,7 +64,7 @@ const updateCategory = async (req, res) => {
   }
 };
 
-// DELETE /api/categories/:id → kategori sil (bağlı ürün kontrolüyle)
+// DELETE /api/categories/:id → kategori sil (bağlı ürün ve kampanya kontrolüyle)
 const deleteCategory = async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) {
@@ -74,7 +72,7 @@ const deleteCategory = async (req, res) => {
   }
 
   try {
-    // Önce bu kategoriye bağlı ürün var mı kontrol et
+    // 1. Ürün kontrolü
     const { data: products, error: prodErr } = await supabase
       .from("crud")
       .select("id")
@@ -85,6 +83,20 @@ const deleteCategory = async (req, res) => {
       return res.status(400).json({ error: "Bu kategoriye bağlı ürün(ler) var, silinemez" });
     }
 
+    // 2. Kampanya ilişkisi kontrolü
+    const { data: campaignLinks, error: linkErr } = await supabase
+      .from("campaign_categories")
+      .select("id")
+      .eq("category_id", id);
+
+    if (linkErr) throw linkErr;
+    if (campaignLinks.length > 0) {
+      return res.status(400).json({
+        error: "Bu kategoriye bağlı kampanyalar mevcut. Önce kampanya ilişkilerini kaldırın."
+      });
+    }
+
+    // 3. Silme işlemi
     const { error: delErr } = await supabase
       .from("categories")
       .delete()

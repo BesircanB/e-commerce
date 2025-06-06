@@ -1,48 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import ProductCard from "./ProductCard";
 import "./ProductList.css";
 import { useSearch } from "../context/SearchContext";
+import { useAuth } from "../context/AuthContext";
 import axios from "../services/axiosInstance";
 
-const ProductList = () => {
+const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
   const { searchTerm } = useSearch();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const [products, setProducts] = useState([]);
-  const [categoryList, setCategoryList] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(propCategoryId);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [sortOption, setSortOption] = useState("Varsayılan");
 
-  // Ürünleri çek
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get("/products");
-        setProducts(response.data.data || []);
-      } catch (err) {
-        console.error("Ürünler alınamadı:", err);
-        setProducts([]);
-      }
-    };
-    fetchProducts();
-  }, []);
+  const fetchProducts = useCallback(async () => {
+    try {
+      const endpoint = isAdmin ? "/products/admin/all" : "/products";
+      const response = await axios.get(endpoint);
+      setProducts(response.data.data || []);
+    } catch (err) {
+      console.error("Ürünler alınamadı:", err);
+      setProducts([]);
+    }
+  }, [isAdmin]);
 
-  // Kategorileri çek
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get("/categories");
-        setCategoryList(response.data || []);
-      } catch (err) {
-        console.error("Kategoriler alınamadı:", err);
-        setCategoryList([]);
-      }
-    };
-    fetchCategories();
-  }, []);
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    if (propCategoryId !== null) {
+      setSelectedCategoryId(propCategoryId);
+    }
+  }, [propCategoryId]);
 
   const filtered = products
+    .filter((p) => isAdmin || p.is_visible)
     .filter((p) => selectedCategoryId === null || p.category_id === selectedCategoryId)
     .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((p) => p.price >= minPrice && p.price <= maxPrice)
@@ -52,40 +48,20 @@ const ProductList = () => {
       return 0;
     });
 
+  const handleEdit = (product) => {
+    console.log("Düzenle", product);
+  };
+
+  const handleDelete = (id) => {
+    console.log("Sil", id);
+  };
+
+  const handleToggleVisibility = (id) => {
+    console.log("Görünürlük değiştir", id);
+  };
+
   return (
     <div style={{ padding: "1rem" }}>
-      {/* Kategori Butonları */}
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
-        <button
-          key="Tümü"
-          onClick={() => setSelectedCategoryId(null)}
-          style={{
-            padding: "0.3rem 0.7rem",
-            borderRadius: "5px",
-            border: selectedCategoryId === null ? "2px solid green" : "1px solid #ccc",
-            background: selectedCategoryId === null ? "#e1f8e8" : "#fff",
-            cursor: "pointer",
-          }}
-        >
-          Tümü
-        </button>
-        {categoryList.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setSelectedCategoryId(c.id)}
-            style={{
-              padding: "0.3rem 0.7rem",
-              borderRadius: "5px",
-              border: selectedCategoryId === c.id ? "2px solid green" : "1px solid #ccc",
-              background: selectedCategoryId === c.id ? "#e1f8e8" : "#fff",
-              cursor: "pointer",
-            }}
-          >
-            {c.name}
-          </button>
-        ))}
-      </div>
-
       {/* Filtreleme Paneli */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <input
@@ -108,19 +84,32 @@ const ProductList = () => {
           <option>Artan</option>
           <option>Azalan</option>
         </select>
-        <button onClick={() => {
-          setSelectedCategoryId(null);
-          setMinPrice(0);
-          setMaxPrice(10000);
-          setSortOption("Varsayılan");
-        }}>Filtreleri Temizle</button>
+        <button
+          onClick={() => {
+            // ✅ Kategori filtreleme prop olarak geliyorsa onu silme!
+            if (!propCategoryId) {
+              setSelectedCategoryId(null);
+            }
+            setMinPrice(0);
+            setMaxPrice(10000);
+            setSortOption("Varsayılan");
+          }}
+        >
+          Filtreleri Temizle
+        </button>
       </div>
 
       {/* Ürünler */}
       <div className="product-grid">
         {filtered.length > 0 ? (
           filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={isAdmin ? handleEdit : undefined}
+              onDelete={isAdmin ? handleDelete : undefined}
+              onToggleVisibility={isAdmin ? handleToggleVisibility : undefined}
+            />
           ))
         ) : (
           <p style={{ gridColumn: "1 / -1", textAlign: "center" }}>

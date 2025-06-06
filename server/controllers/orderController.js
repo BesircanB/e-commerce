@@ -239,19 +239,34 @@ async function getAllOrders(req, res) {
 
     if (prodErr) throw prodErr;
 
-    // 4. Her siparişteki her item’a ürün bilgisi ekle
-    const ordersWithProductDetails = orders.map(order => ({
-      ...order,
-      order_items: order.order_items.map(item => {
-        const product = products.find(p => p.id === item.product_id);
-        return {
-          ...item,
-          product: product || null
-        };
-      })
-    }));
+    // 4. Tüm user_id'leri topla
+    const userIds = [...new Set(orders.map(order => order.user_id))];
 
-    return res.status(200).json(ordersWithProductDetails);
+    // 5. Kullanıcı bilgilerini getir
+    const { data: users, error: userErr } = await supabaseAdmin
+      .from("users")
+      .select("id, name, email")
+      .in("id", userIds);
+
+    if (userErr) throw userErr;
+
+    // 6. Siparişleri kullanıcı ve ürün detayları ile zenginleştir
+    const enrichedOrders = orders.map(order => {
+      const user = users.find(u => u.id === order.user_id);
+      return {
+        ...order,
+        user: user || null,
+        order_items: order.order_items.map(item => {
+          const product = products.find(p => p.id === item.product_id);
+          return {
+            ...item,
+            product: product || null
+          };
+        })
+      };
+    });
+
+    return res.status(200).json(enrichedOrders);
   } catch (err) {
     console.error("getAllOrders error:", err);
     return res.status(500).json({ error: err.message });

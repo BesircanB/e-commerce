@@ -1,5 +1,3 @@
-// server/controllers/campaignController.js
-
 const supabase = require("../services/supabase");
 
 // ✅ PUBLIC: Aktif kampanyaları getir
@@ -9,7 +7,7 @@ const getActiveCampaigns = async (req, res) => {
 
     const { data, error } = await supabase
       .from("campaigns")
-      .select("*")
+      .select("*, campaign_categories(category_id)")
       .lte("start_date", today)
       .gte("end_date", today)
       .eq("is_active", true);
@@ -39,8 +37,7 @@ const getAllCampaigns = async (req, res) => {
   }
 };
 
-// ✅ ADMIN: Yeni kampanya oluştur
-
+// ✅ ADMIN: Yeni kampanya oluştur (kategori desteği eklendi)
 const createCampaign = async (req, res) => {
   const {
     title,
@@ -52,18 +49,16 @@ const createCampaign = async (req, res) => {
     end_date,
     is_active,
     code,
-    apply_type
+    apply_type,
+    category_ids = [] // 👈 gelen kategori dizisi (opsiyonel)
   } = req.body;
 
   if (!title || !discount_type || discount_value == null || !apply_type) {
     return res.status(400).json({ error: "Zorunlu alanlar eksik" });
   }
 
-  // Eğer apply_type "code" ise, code zorunlu ve benzersiz olmalı
   if (apply_type === "code") {
-    if (!code) {
-      return res.status(400).json({ error: "Kupon kodu zorunludur" });
-    }
+    if (!code) return res.status(400).json({ error: "Kupon kodu zorunludur" });
 
     const { data: existing, error: checkErr } = await supabase
       .from("campaigns")
@@ -72,9 +67,7 @@ const createCampaign = async (req, res) => {
       .maybeSingle();
 
     if (checkErr) throw checkErr;
-    if (existing) {
-      return res.status(409).json({ error: "Bu kupon kodu zaten mevcut" });
-    }
+    if (existing) return res.status(409).json({ error: "Bu kupon kodu zaten mevcut" });
   }
 
   const insertData = {
@@ -91,7 +84,7 @@ const createCampaign = async (req, res) => {
   };
 
   try {
-    const { data, error } = await supabase
+    const { data: newCampaign, error } = await supabase
       .from("campaigns")
       .insert([insertData])
       .select()
@@ -99,14 +92,31 @@ const createCampaign = async (req, res) => {
 
     if (error) throw error;
 
-    return res.status(201).json(data);
+    // 🔁 Kategori eşleşmelerini kaydet
+    if (category_ids.length > 0) {
+      const mappings = category_ids.map((category_id) => ({
+        campaign_id: newCampaign.id,
+        category_id
+      }));
+
+      const { error: catMapErr } = await supabase
+        .from("campaign_categories")
+        .insert(mappings);
+
+      if (catMapErr) {
+        console.warn("Kategori eşleme hatası:", catMapErr.message);
+        // (silmek istersen buradan rollback yapılabilir)
+      }
+    }
+
+    return res.status(201).json(newCampaign);
   } catch (err) {
     console.error("createCampaign error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
 
-
+// ✅ ADMIN: Kampanya güncelle
 // ✅ ADMIN: Kampanya güncelle
 const updateCampaign = async (req, res) => {
   const id = Number(req.params.id);
@@ -117,21 +127,48 @@ const updateCampaign = async (req, res) => {
   }
 
   try {
-    const { data, error } = await supabase
+    // 1. Kampanya güncelle
+    const { data: updatedCampaign, error: updateErr } = await supabase
       .from("campaigns")
       .update(updateFields)
       .eq("id", id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (updateErr) throw updateErr;
 
-    return res.status(200).json(data);
+    // 2. Kategori eşleşmeleri varsa güncelle
+    if (updateFields.category_ids) {
+      // 🔁 Önce mevcut eşleşmeleri sil
+      const { error: deleteErr } = await supabase
+        .from("campaign_categories")
+        .delete()
+        .eq("campaign_id", id);
+
+      if (deleteErr) throw deleteErr;
+
+      // ➕ Yeni eşleşmeleri ekle
+      if (updateFields.category_ids.length > 0) {
+        const mappings = updateFields.category_ids.map((catId) => ({
+          campaign_id: id,
+          category_id: catId
+        }));
+
+        const { error: insertErr } = await supabase
+          .from("campaign_categories")
+          .insert(mappings);
+
+        if (insertErr) throw insertErr;
+      }
+    }
+
+    return res.status(200).json(updatedCampaign);
   } catch (err) {
     console.error("updateCampaign error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 // ✅ ADMIN: Kampanya sil
 const deleteCampaign = async (req, res) => {

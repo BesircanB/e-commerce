@@ -1,6 +1,28 @@
 const supabase = require("../services/supabase");
 const supabaseAdmin = require("../services/supabase").supabaseAdmin;
 
+const filterCampaignsByCategories = async (cartProductCategories, campaignIds) => {
+  // Tüm kampanya-kategori eşleşmelerini getir
+  const { data: mappings, error } = await supabase
+    .from("campaign_categories")
+    .select("campaign_id, category_id")
+    .in("campaign_id", campaignIds);
+
+  if (error) throw error;
+
+  // Kampanyanın kategorilerinden en az biri sepet ürün kategorisine uyuyorsa eşleştir
+  const validCampaignIds = new Set();
+
+  for (const map of mappings) {
+    if (cartProductCategories.includes(map.category_id)) {
+      validCampaignIds.add(map.campaign_id);
+    }
+  }
+
+  return Array.from(validCampaignIds);
+};
+
+
 // Sepete ekle veya var ise adeti güncelle
 const addToCart = async (req, res) => {
   const user_id = req.user.id;
@@ -80,7 +102,7 @@ const applyCouponToCart = async (req, res) => {
   const { code } = req.body;
 
   try {
-    // 1. Sepet ürünlerini al
+    // 1. Sepetteki ürünleri al
     const { data: cartItems, error: cartErr } = await supabaseAdmin
       .from("cart")
       .select("quantity, product_id")
@@ -91,37 +113,33 @@ const applyCouponToCart = async (req, res) => {
       return res.status(400).json({ error: "Sepetiniz boş" });
     }
 
-    // 2. Ürün fiyatlarını getir
     const productIds = cartItems.map(item => item.product_id);
+
+    // 2. Ürün bilgileri: fiyat ve kategori
     const { data: products, error: prodErr } = await supabase
       .from("crud")
-      .select("id, price")
+      .select("id, price, category_id")
       .in("id", productIds);
 
     if (prodErr) throw prodErr;
 
-    // 3. Toplam fiyat hesapla
+    const cartProductCategories = [...new Set(products.map(p => p.category_id))]; // benzersiz kategori id’leri
+
+    // 3. Sepet toplamını hesapla
     let total = 0;
     for (const item of cartItems) {
-
-
-
       const product = products.find(p => p.id === item.product_id);
       if (product) {
         total += product.price * item.quantity;
       }
     }
 
-
-
     const now = new Date().toISOString();
-    let autoDiscountTotal = 0;
-    let autoDiscounts = [];
 
-    // 4. Otomatik kampanyaları uygula
+    // 4. Otomatik kampanyaları al
     const { data: autoCampaigns, error: autoErr } = await supabase
       .from("campaigns")
-      .select("title, discount_type, discount_value, min_order_amount")
+      .select("id, title, discount_type, discount_value, min_order_amount")
       .eq("apply_type", "auto")
       .eq("is_active", true)
       .lte("start_date", now)
@@ -129,7 +147,15 @@ const applyCouponToCart = async (req, res) => {
 
     if (autoErr) throw autoErr;
 
-    for (const camp of autoCampaigns) {
+    // 🔍 Kategorilere göre filtrele
+    const autoCampaignIds = autoCampaigns.map(c => c.id);
+    const validAutoCampaignIds = await filterCampaignsByCategories(cartProductCategories, autoCampaignIds);
+    const filteredAutoCampaigns = autoCampaigns.filter(c => validAutoCampaignIds.includes(c.id));
+
+    let autoDiscountTotal = 0;
+    let autoDiscounts = [];
+
+    for (const camp of filteredAutoCampaigns) {
       if (total >= camp.min_order_amount) {
         let discount = 0;
         if (camp.discount_type === "percentage") {
@@ -138,14 +164,11 @@ const applyCouponToCart = async (req, res) => {
           discount = camp.discount_value;
         }
         autoDiscountTotal += discount;
-        autoDiscounts.push({
-          title: camp.title,
-          amount: discount
-        });
+        autoDiscounts.push({ title: camp.title, amount: discount });
       }
     }
 
-    // 5. Kupon kodu varsa onu kontrol et
+    // 5. Kupon kontrolü
     let codeDiscount = 0;
     let codeDiscountInfo = null;
 
@@ -166,20 +189,28 @@ const applyCouponToCart = async (req, res) => {
         return res.status(404).json({ error: "Geçerli bir kupon bulunamadı" });
       }
 
+      // ❗ Kategorilere uyumlu mu?
+      const matchIds = await filterCampaignsByCategories(cartProductCategories, [codeCampaign.id]);
+      const isEligible = matchIds.includes(codeCampaign.id);
+
+      if (!isEligible) {
+        return res.status(400).json({
+          error: "Bu kupon, sepetinizdeki ürün kategorileriyle uyumlu değil."
+        });
+      }
+
       if (total < codeCampaign.min_order_amount) {
         return res.status(400).json({
           error: `Bu kupon için minimum sepet tutarı ${codeCampaign.min_order_amount}₺ olmalıdır`
         });
       }
 
-      // İndirim hesapla
       if (codeCampaign.discount_type === "percentage") {
         codeDiscount = (total * codeCampaign.discount_value) / 100;
       } else if (codeCampaign.discount_type === "fixed") {
         codeDiscount = codeCampaign.discount_value;
       }
 
-      // Sepete kuponu kaydet
       await supabaseAdmin
         .from("cart")
         .update({ coupon_code: code })
@@ -192,34 +223,30 @@ const applyCouponToCart = async (req, res) => {
       };
     }
 
-    // 6. Toplam indirim ve final fiyat
     const totalDiscount = autoDiscountTotal + codeDiscount;
     const finalTotal = Math.max(total - totalDiscount, 0);
 
-      const enrichedItems = cartItems.map(item => {
-        const product = products.find(p => p.id === item.product_id);
-          return {
-            ...item,
-          product: product || null
-          };
-      });
+    const enrichedItems = cartItems.map(item => {
+      const product = products.find(p => p.id === item.product_id);
+      return { ...item, product: product || null };
+    });
 
-    // 7. Cevap
     return res.status(200).json({
-        items: enrichedItems,
-        original_total: total,
-        discounts: {
+      items: enrichedItems,
+      original_total: total,
+      discounts: {
         auto: autoDiscounts,
         code: codeDiscountInfo
-        },
-        total_discount: totalDiscount,
-        final_total: finalTotal
+      },
+      total_discount: totalDiscount,
+      final_total: finalTotal
     });
   } catch (err) {
     console.error("applyCouponToCart error:", err);
-    return res.status(500).json({ error: "Sunucu hatası" });
+    return res.status(500).json({ error: "Sunucu hatası: " + err.message });
   }
 };
+
 
 
 // Sepeti getir
@@ -227,29 +254,31 @@ const getCart = async (req, res) => {
   const user_id = req.user.id;
 
   try {
-    // 1. Sepet verilerini al
+    // 1. Sepeti getir
     const { data: cartItems, error } = await supabaseAdmin
       .from("cart")
       .select("id, product_id, quantity, created_at, coupon_code")
       .eq("user_id", user_id)
-      .order("created_at", { ascending: true }); // ← ilk eklenen ürün en üstte
-
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
     if (!cartItems || cartItems.length === 0) {
       return res.status(200).json({ items: [], message: "Sepet boş" });
     }
 
-    // 2. Ürün bilgilerini al
     const productIds = cartItems.map(item => item.product_id);
+
+    // 2. Ürün bilgileri: fiyat ve kategori
     const { data: products, error: prodErr } = await supabase
       .from("crud")
-      .select("id, name, price, image_url")
+      .select("id, name, price, image_url, category_id")
       .in("id", productIds);
 
     if (prodErr) throw prodErr;
 
-    // 3. Toplam fiyatı hesapla
+    const cartProductCategories = [...new Set(products.map(p => p.category_id))];
+
+    // 3. Toplam fiyat
     let total = 0;
     for (const item of cartItems) {
       const product = products.find(p => p.id === item.product_id);
@@ -258,10 +287,10 @@ const getCart = async (req, res) => {
 
     const now = new Date().toISOString();
 
-    // 4. Otomatik kampanyalar
+    // 4. Otomatik kampanyaları getir
     const { data: autoCampaigns, error: autoErr } = await supabase
       .from("campaigns")
-      .select("title, discount_type, discount_value, min_order_amount")
+      .select("id, title, discount_type, discount_value, min_order_amount")
       .eq("apply_type", "auto")
       .eq("is_active", true)
       .lte("start_date", now)
@@ -269,10 +298,15 @@ const getCart = async (req, res) => {
 
     if (autoErr) throw autoErr;
 
+    // 🔍 Kategori eşlemesi
+    const autoCampaignIds = autoCampaigns.map(c => c.id);
+    const validAutoCampaignIds = await filterCampaignsByCategories(cartProductCategories, autoCampaignIds);
+    const filteredAutoCampaigns = autoCampaigns.filter(c => validAutoCampaignIds.includes(c.id));
+
     let autoDiscountTotal = 0;
     let autoDiscounts = [];
 
-    for (const camp of autoCampaigns) {
+    for (const camp of filteredAutoCampaigns) {
       if (total >= camp.min_order_amount) {
         let discount = 0;
         if (camp.discount_type === "percentage") {
@@ -285,7 +319,7 @@ const getCart = async (req, res) => {
       }
     }
 
-    // 5. Kupon kodu
+    // 5. Kupon kodu kontrolü
     const couponCode = cartItems[0].coupon_code;
     let codeDiscount = 0;
     let codeDiscountInfo = null;
@@ -293,7 +327,7 @@ const getCart = async (req, res) => {
     if (couponCode) {
       const { data: campData, error: campErr } = await supabase
         .from("campaigns")
-        .select("title, code, discount_type, discount_value, min_order_amount")
+        .select("id, title, code, discount_type, discount_value, min_order_amount")
         .eq("code", couponCode)
         .eq("apply_type", "code")
         .eq("is_active", true)
@@ -304,21 +338,27 @@ const getCart = async (req, res) => {
       if (campErr) throw campErr;
 
       if (campData && total >= campData.min_order_amount) {
-        if (campData.discount_type === "percentage") {
-          codeDiscount = (total * campData.discount_value) / 100;
-        } else if (campData.discount_type === "fixed") {
-          codeDiscount = campData.discount_value;
-        }
+        // ❗ Kategorilere uyumlu mu?
+        const matchIds = await filterCampaignsByCategories(cartProductCategories, [campData.id]);
+        const isEligible = matchIds.includes(campData.id);
 
-        codeDiscountInfo = {
-          title: campData.title,
-          code: campData.code,
-          amount: codeDiscount
-        };
+        if (isEligible) {
+          if (campData.discount_type === "percentage") {
+            codeDiscount = (total * campData.discount_value) / 100;
+          } else if (campData.discount_type === "fixed") {
+            codeDiscount = campData.discount_value;
+          }
+
+          codeDiscountInfo = {
+            title: campData.title,
+            code: campData.code,
+            amount: codeDiscount
+          };
+        }
       }
     }
 
-    // 6. Ürün bilgilerini sepet öğelerine ekle
+    // 6. Sepet ürünlerine ürün detaylarını ekle
     const enrichedItems = cartItems.map(item => {
       const product = products.find(p => p.id === item.product_id);
       return {
@@ -327,11 +367,10 @@ const getCart = async (req, res) => {
       };
     });
 
-    // 7. Final toplam
+    // 7. Toplamlar
     const totalDiscount = autoDiscountTotal + codeDiscount;
     const finalTotal = Math.max(total - totalDiscount, 0);
 
-    // ✅ Cevap
     return res.status(200).json({
       items: enrichedItems,
       original_total: total,
