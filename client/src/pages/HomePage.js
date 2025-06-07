@@ -1,8 +1,8 @@
 import React from "react";
-import Header from "../components/Header";
+import Header from "../components/Header/Header";
 import { useCategories } from "../context/CategoryContext";
 import { useNavigate } from "react-router-dom";
-import ProductList from "../components/ProductList"; // ✅ ürünleri göstermek için eklendi
+import ProductList from "../components/ProductList/ProductList"; // ✅ ürünleri göstermek için eklendi
 
 const HomePage = () => {
   const { categories } = useCategories();

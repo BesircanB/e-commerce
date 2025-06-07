@@ -311,6 +311,36 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+
+// ✅ Kullanıcının bu ürünü satın alıp almadığını kontrol et
+const checkIfUserPurchasedProduct = async (req, res) => {
+  const productId = Number(req.params.id);
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Kimlik doğrulama gerekli" });
+  }
+
+  try {
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("order_items(product_id)")
+      .eq("user_id", userId);
+
+    if (error) throw error;
+
+    const allProductIds = orders
+      .flatMap(order => order.order_items || [])
+      .map(item => item.product_id);
+
+    const hasPurchased = allProductIds.includes(productId);
+    return res.json({ hasPurchased });
+  } catch (err) {
+    console.error("Satın alım kontrolü hatası:", err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getAllProductsAdmin,
@@ -321,4 +351,5 @@ module.exports = {
   updateProductStock,
   updateProductVisibility,
   deleteProduct,
+  checkIfUserPurchasedProduct
 };

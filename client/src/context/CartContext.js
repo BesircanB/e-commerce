@@ -8,7 +8,6 @@ export const CartProvider = ({ children }) => {
   const { token } = useAuth();
 
   const [cartItems, setCartItems] = useState([]);
-  const [campaigns, setCampaigns] = useState(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +20,6 @@ export const CartProvider = ({ children }) => {
       });
 
       setCartItems(res.data.items || []);
-      setCampaigns(res.data.discounts || null);
       setTotal(res.data.final_total || 0);
     } catch (err) {
       console.error("Sepet alınamadı:", err);
@@ -46,49 +44,46 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-const increaseQuantity = async (cartItemId) => {
-  if (!token) return;
-  try {
-    const item = cartItems.find((item) => item.id === cartItemId);
-    if (!item) return;
+  const increaseQuantity = async (cartItemId) => {
+    if (!token) return;
+    try {
+      const item = cartItems.find((item) => item.id === cartItemId);
+      if (!item) return;
 
-    await axios.put(
-      `/cart/${cartItemId}`,
-      { quantity: item.quantity + 1 },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    await getCart();
-  } catch (err) {
-    console.error("Adet artırılamadı:", err);
-  }
-};
-
-const decreaseQuantity = async (cartItemId) => {
-  if (!token) return;
-  try {
-    const item = cartItems.find((item) => item.id === cartItemId);
-    if (!item) return;
-
-    if (item.quantity === 1) {
-      // 1 ise ürünü sepetten tamamen sil
-      await removeFromCart(cartItemId);
-    } else {
-      // değilse sadece adetini azalt
       await axios.put(
         `/cart/${cartItemId}`,
-        { quantity: item.quantity - 1 },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { quantity: item.quantity + 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      await getCart();
+    } catch (err) {
+      console.error("Adet artırılamadı:", err);
     }
+  };
 
-    await getCart();
-  } catch (err) {
-    console.error("Adet azaltılamadı:", err);
-  }
-};
+  const decreaseQuantity = async (cartItemId) => {
+    if (!token) return;
+    try {
+      const item = cartItems.find((item) => item.id === cartItemId);
+      if (!item) return;
 
+      if (item.quantity === 1) {
+        await removeFromCart(cartItemId);
+      } else {
+        await axios.put(
+          `/cart/${cartItemId}`,
+          { quantity: item.quantity - 1 },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
+
+      await getCart();
+    } catch (err) {
+      console.error("Adet azaltılamadı:", err);
+    }
+  };
 
   const removeFromCart = async (productId) => {
     if (!token) return;
@@ -114,26 +109,6 @@ const decreaseQuantity = async (cartItemId) => {
     }
   };
 
-  const applyCampaign = async (code) => {
-    if (!token) return { success: false, message: "Giriş yapmalısınız" };
-    try {
-      const res = await axios.post(
-        "/cart/apply-coupon",
-        { code },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      await getCart();
-      return { success: true };
-    } catch (err) {
-      console.error("Kampanya uygulanamadı:", err);
-      return {
-        success: false,
-        message:
-          err.response?.data?.error || "Kampanya kodu geçerli değil",
-      };
-    }
-  };
-
   useEffect(() => {
     getCart();
   }, [token]);
@@ -142,7 +117,6 @@ const decreaseQuantity = async (cartItemId) => {
     <CartContext.Provider
       value={{
         cartItems,
-        campaigns,
         total,
         loading,
         getCart,
@@ -151,7 +125,6 @@ const decreaseQuantity = async (cartItemId) => {
         decreaseQuantity,
         removeFromCart,
         clearCart,
-        applyCampaign,
       }}
     >
       {children}

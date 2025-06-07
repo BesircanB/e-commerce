@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import Header from "../components/Header";
+import Header from "../components/Header/Header";
 import { useNavigate } from "react-router-dom";
 import axios from "../services/axiosInstance";
 

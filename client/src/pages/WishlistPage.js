@@ -1,7 +1,7 @@
 import React from "react";
 import { useWishlist } from "../context/WishlistContext";
-import ProductCard from "../components/ProductCard";
-import Header from "../components/Header";
+import ProductCard from "../components/ProductCard/ProductCard";
+import Header from "../components/Header/Header";
 
 const WishlistPage = () => {
   const { wishlist } = useWishlist();

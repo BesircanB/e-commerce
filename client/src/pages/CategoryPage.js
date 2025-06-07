@@ -1,8 +1,8 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useCategories } from "../context/CategoryContext";
-import ProductList from "../components/ProductList";
-import Header from "../components/Header";
+import ProductList from "../components/ProductList/ProductList";
+import Header from "../components/Header/Header";
 
 const CategoryPage = () => {
   const { id } = useParams();
