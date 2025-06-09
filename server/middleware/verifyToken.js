@@ -11,7 +11,6 @@ const verifyToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ error: "Token eksik veya hatalı" });
   }
-//
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -22,7 +21,7 @@ const verifyToken = (req, res, next) => {
     }
 
     req.user = {
-      id: decoded.userId,           // UUID string olarak bırakıldı
+      userId: decoded.userId, // ✅ Değiştirildi: id → userId
       email: decoded.email,
       role: decoded.role
     };

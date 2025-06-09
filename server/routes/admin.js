@@ -1,11 +1,30 @@
-// server/routes/admin.js
-const express     = require("express");
-const router      = express.Router();
-const verifyToken = require("../middleware/verifyToken");
-const checkAdmin  = require("../middleware/checkAdmin");
-const { getAdminMetrics } = require("../controllers/adminController");
+const express = require("express");
+const router = express.Router();
 
-// GET /api/admin/metrics → Admin dashboard verileri
+const verifyToken = require("../middleware/verifyToken");
+const checkAdmin = require("../middleware/checkAdmin");
+
+const {
+  getAdminMetrics,
+  getRevenueStats,
+  getMonthlyRevenue,
+} = require("../controllers/adminController");
+
+const productController = require("../controllers/productController");
+
+// --- 📊 Admin dashboard istatistikleri
 router.get("/metrics", verifyToken, checkAdmin, getAdminMetrics);
+
+// --- 💰 Finansal veriler
+router.get("/revenue", verifyToken, checkAdmin, getRevenueStats);
+
+// --- 📈 Aylık gelir grafiği
+router.get("/revenue/monthly", verifyToken, checkAdmin, getMonthlyRevenue);
+
+// --- 🔍 Admin ürün arama (görünürlüğe bakmaz)
+router.get("/products/search", verifyToken, checkAdmin, productController.searchAdminProducts);
+
+router.get("/products/top-sellers", verifyToken, checkAdmin, getTopSelling);
+
 
 module.exports = router;

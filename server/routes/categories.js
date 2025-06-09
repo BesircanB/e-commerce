@@ -1,7 +1,6 @@
-// server/routes/categories.js
+const express = require("express");
+const router = express.Router();
 
-const express     = require("express");
-const router      = express.Router();
 const verifyToken = require("../middleware/verifyToken");
 const checkAdmin  = require("../middleware/checkAdmin");
 
@@ -9,17 +8,19 @@ const {
   getAllCategories,
   createCategory,
   updateCategory,
-  deleteCategory 
-
+  deleteCategory,
 } = require("../controllers/categoryController");
 
-router.get("/", getAllCategories); // public erişilebilir
+// ✅ Public: Tüm kategorileri listele
+router.get("/", getAllCategories);
 
+// ✅ Admin: Yeni kategori oluştur
+router.post("/", verifyToken, checkAdmin, createCategory);
 
-//Admin için
-router.post("/", verifyToken, checkAdmin, createCategory); // sadece admin
+// ✅ Admin: Kategori güncelle
 router.put("/:id", verifyToken, checkAdmin, updateCategory);
-router.delete("/:id", verifyToken, checkAdmin, deleteCategory);
 
+// ✅ Admin: Kategori sil (bağlı ürün yoksa)
+router.delete("/:id", verifyToken, checkAdmin, deleteCategory);
 
 module.exports = router;

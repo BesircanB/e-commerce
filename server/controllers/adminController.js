@@ -1,65 +1,66 @@
-// server/controllers/adminController.js
-const supabase = require("../services/supabase");
+const adminService = require("../services/adminService");
+const productService = require("../services/productService");
 
-const getAdminMetrics = async (req, res) => {
+async function getAdminMetrics(req, res) {
   try {
-    // 1. Bekleyen sipariş sayısı
-    const { count: pendingCount, error: pendErr } = await supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending");
-    if (pendErr) throw pendErr;
-
-    // 2. Aylık ciro (geçerli ay)
-    const startOfMonth = new Date(
-      new Date().getFullYear(),
-      new Date().getMonth(),
-      1
-    ).toISOString();
-    const { data: revenueData, error: revErr } = await supabase
-      .from("orders")
-      .select("sum:sum(total_amount)", { head: true })
-      .eq("status", "paid")
-      .gte("created_at", startOfMonth);
-    if (revErr) throw revErr;
-    const monthlyRevenue = revenueData?.sum || 0;
-
-    // 3. En çok satılan 5 ürün
-    const { data: topProducts, error: topErr } = await supabase
-      .from("order_items")
-      .select("product_id, quantity")
-      .neq("quantity", 0);
-    if (topErr) throw topErr;
-
-    const salesByProduct = topProducts.reduce((acc, item) => {
-      acc[item.product_id] = (acc[item.product_id] || 0) + item.quantity;
-      return acc;
-    }, {});
-    const sorted = Object.entries(salesByProduct)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5);
-
-    const productIds = sorted.map(([id]) => Number(id));
-    const { data: products, error: prodErr } = await supabase
-      .from("crud")
-      .select("id, name")
-      .in("id", productIds);
-    if (prodErr) throw prodErr;
-
-    const topSelling = sorted.map(([id, qty]) => {
-      const prod = products.find((p) => p.id === Number(id));
-      return { productId: Number(id), name: prod?.name || "—", sold: qty };
-    });
-
-    return res.json({
-      pendingOrders: pendingCount,
-      monthlyRevenue,
-      topSelling,
-    });
+    const metrics = await adminService.getAdminMetrics();
+    return res.status(200).json(metrics);
   } catch (err) {
-    console.error("Admin metrics error:", err);
-    return res.status(500).json({ error: err.message });
+    console.error("getAdminMetrics error:", err.message);
+    return res.status(500).json({ error: "Admin metrikleri alınamadı" });
   }
-};
+}
 
-module.exports = { getAdminMetrics };
+async function getRevenueStats(req, res) {
+  try {
+    const stats = await adminService.fetchRevenueStats();
+    return res.status(200).json(stats);
+  } catch (err) {
+    console.error("getRevenueStats error:", err.message);
+    return res.status(500).json({ error: "Gelir verileri alınamadı" });
+  }
+}
+
+async function getMonthlyRevenue(req, res) {
+  try {
+    const result = await adminService.fetchMonthlyRevenue();
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("getMonthlyRevenue error:", err.message);
+    return res.status(500).json({ error: "Aylık gelir getirilemedi" });
+  }
+}
+
+// --- 🔍 Admin ürün arama
+async function searchAdminProducts(req, res) {
+  try {
+    const keyword = req.query.q || "";
+    const category = req.query.category || "";
+    const result = await productService.searchProducts({
+      keyword,
+      category,
+      includeInvisible: true, // admin tüm ürünleri görebilir
+    });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("searchAdminProducts error:", err.message);
+    return res.status(500).json({ error: "Ürün araması yapılamadı" });
+  }
+}
+async function getTopSelling(req, res) {
+  try {
+    const top = await adminService.getTopSellingProducts();
+    return res.status(200).json(top);
+  } catch (err) {
+    console.error("getTopSellingProducts error:", err.message);
+    return res.status(500).json({ error: "Satış verileri alınamadı" });
+  }
+}
+
+
+module.exports = {
+  getAdminMetrics,
+  getRevenueStats,
+  getMonthlyRevenue,
+  searchAdminProducts,
+};

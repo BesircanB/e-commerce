@@ -1,8 +1,8 @@
-// server/routes/products.js
-const express     = require("express");
-const router      = express.Router();
+const express = require("express");
+const router = express.Router();
+
 const verifyToken = require("../middleware/verifyToken");
-const checkAdmin  = require("../middleware/checkAdmin");
+const checkAdmin = require("../middleware/checkAdmin");
 
 const productController = require("../controllers/productController");
 
@@ -16,7 +16,8 @@ const {
   updateProductStock,
   updateProductVisibility,
   deleteProduct,
-  checkIfUserPurchasedProduct // ✅ eklendi
+  checkIfUserPurchasedProduct,
+  searchPublicProducts, // ✅ eklendi
 } = productController;
 
 // --- 🛡️ ADMIN ROUTES ---
@@ -29,8 +30,9 @@ router.put("/:id/stock", verifyToken, checkAdmin, updateProductStock);
 router.delete("/:id", verifyToken, checkAdmin, deleteProduct);
 
 // --- 👤 PUBLIC ROUTES ---
+router.get("/search", searchPublicProducts); // ✅ public search route
 router.get("/", getAllProducts);
 router.get("/:id", getProductById);
-router.get("/:id/has-purchased", verifyToken, checkIfUserPurchasedProduct); // ✅ yeni public route
+router.get("/:id/has-purchased", verifyToken, checkIfUserPurchasedProduct); // ✅ satın alma kontrolü
 
 module.exports = router;
