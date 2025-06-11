@@ -9,18 +9,31 @@ export const CartProvider = ({ children }) => {
 
   const [cartItems, setCartItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [discount, setDiscount] = useState(0);
+  const [finalTotal, setFinalTotal] = useState(0);
+  const [appliedCouponCampaign, setAppliedCouponCampaign] = useState(null);
+  const [appliedAutoCampaign, setAppliedAutoCampaign] = useState(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [autoDiscount, setAutoDiscount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Sepeti sunucudan getir
   const getCart = async () => {
     if (!token) return;
+    setLoading(true);
     try {
       const res = await axios.get("/cart", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setCartItems(res.data.items || []);
-      setTotal(res.data.final_total || 0);
+      setTotal(res.data.total || 0);
+      setDiscount(res.data.totalDiscount || 0);
+      setFinalTotal(res.data.finalTotal || 0);
+      setAppliedCouponCampaign(res.data.appliedCouponCampaign || null);
+      setAppliedAutoCampaign(res.data.appliedAutoCampaign || null);
+      setCouponDiscount(res.data.couponDiscount || 0);
+      setAutoDiscount(res.data.autoDiscount || 0);
     } catch (err) {
       console.error("Sepet alınamadı:", err);
     } finally {
@@ -109,6 +122,36 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  // Kupon/kampanya uygula
+  const applyCampaign = async (code) => {
+    if (!token) return { success: false, message: "Giriş yapmalısınız" };
+    try {
+      await axios.post(
+        "/cart/apply-coupon",
+        { couponCode: code },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await getCart();
+      return { success: true };
+    } catch (err) {
+      console.error("Kampanya uygulanamadı:", err);
+      return {
+        success: false,
+        message: err.response?.data?.error || "Kampanya kodu geçerli değil",
+      };
+    }
+  };
+
+  // CampaignSummary için uygun veri
+  const campaigns = {
+    auto: appliedAutoCampaign
+      ? [{ title: appliedAutoCampaign.title, amount: autoDiscount }]
+      : [],
+    code: appliedCouponCampaign
+      ? { code: appliedCouponCampaign.code, amount: couponDiscount }
+      : null,
+  };
+
   useEffect(() => {
     getCart();
   }, [token]);
@@ -118,6 +161,13 @@ export const CartProvider = ({ children }) => {
       value={{
         cartItems,
         total,
+        discount,
+        finalTotal,
+        couponDiscount,
+        autoDiscount,
+        appliedCouponCampaign,
+        appliedAutoCampaign,
+        campaigns,
         loading,
         getCart,
         addToCart,
@@ -125,6 +175,7 @@ export const CartProvider = ({ children }) => {
         decreaseQuantity,
         removeFromCart,
         clearCart,
+        applyCampaign,
       }}
     >
       {children}

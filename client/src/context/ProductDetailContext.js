@@ -8,7 +8,8 @@ export const ProductDetailProvider = ({ children }) => {
   const { user, token } = useAuth();
 
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
 
@@ -16,26 +17,25 @@ export const ProductDetailProvider = ({ children }) => {
     setLoading(true);
     setProduct(null);
     setHasPurchased(false);
-
+    setError(null);
     try {
       // Ürün bilgisi
       const endpoint = user?.role === "admin"
         ? `/products/admin/${productId}`
         : `/products/${productId}`;
-
       const res = await axios.get(endpoint);
       setProduct(res.data);
 
-      // Satın alım kontrolü (optimize edilmiş)
+      // Satın alım kontrolü
       if (user && token) {
         const purchaseCheck = await axios.get(`/products/${productId}/has-purchased`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setHasPurchased(purchaseCheck.data.hasPurchased);
+        // Backend response: { purchased: true/false }
+        setHasPurchased(!!purchaseCheck.data.purchased);
       }
-
     } catch (err) {
-      console.error("Ürün veya satın alma bilgisi alınamadı:", err);
+      setError("Ürün veya satın alma bilgisi alınamadı");
     } finally {
       setLoading(false);
     }
@@ -46,6 +46,7 @@ export const ProductDetailProvider = ({ children }) => {
       value={{
         product,
         loading,
+        error,
         isImageModalOpen,
         setImageModalOpen,
         fetchProduct,

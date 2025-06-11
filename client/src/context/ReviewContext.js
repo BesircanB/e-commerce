@@ -37,7 +37,7 @@ export const ReviewProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Yeni yorum gönder / güncelle
+  // Yorum ekle/güncelle
   const submitReview = async ({ productId, rating, comment, photo_url }) => {
     if (!token) {
       setError("Giriş yapmalısınız.");

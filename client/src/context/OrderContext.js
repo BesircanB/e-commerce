@@ -7,16 +7,21 @@ const OrderContext = createContext();
 export const OrderProvider = ({ children }) => {
   const { token } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const getOrders = async () => {
     if (!token) return;
+    setLoading(true);
     try {
       const res = await axios.get("/orders/my", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setOrders(res.data.data || []);
+      setOrders(res.data || []);
     } catch (err) {
       console.error("Siparişler alınamadı:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -26,7 +31,7 @@ export const OrderProvider = ({ children }) => {
       const res = await axios.post("/orders", {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      await getOrders(); // listeyi yenile
+      await getOrders();
       return { success: true, order: res.data };
     } catch (err) {
       console.error("Sipariş oluşturulamadı:", err);
@@ -51,7 +56,7 @@ export const OrderProvider = ({ children }) => {
   }, [token]);
 
   return (
-    <OrderContext.Provider value={{ orders, placeOrder, cancelOrder }}>
+    <OrderContext.Provider value={{ orders, loading, getOrders, placeOrder, cancelOrder }}>
       {children}
     </OrderContext.Provider>
   );

@@ -4,6 +4,16 @@ const orderService = require("../services/orderService");
 async function createOrder(req, res) {
   try {
     const userId = req.user.userId;
+    // Kullanıcı profilini çek
+    const user = await require("../services/userService").getProfile(userId);
+
+    // Gerekli alanlar kontrolü
+    if (!user.name || !user.email || !user.phone) {
+      return res.status(400).json({
+        error: "Sipariş için isim, e-posta ve telefon bilgileriniz eksiksiz olmalıdır."
+      });
+    }
+
     const result = await orderService.createOrder(userId);
     res.status(201).json(result);
   } catch (err) {

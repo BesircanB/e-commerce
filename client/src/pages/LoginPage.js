@@ -2,30 +2,21 @@ import React, { useState } from "react";
 import Modal from "../components/Modal";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import axios from "../services/axiosInstance";
-import GoogleLoginButton from "../components/GoogleLoginButton"; // ✅ yeni bileşen
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loading, error } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post("/auth/login", { email, password });
-
-      const { token, user } = response.data;
-
-      // AuthContext'e login (hem user hem token)
-      login({ userData: user, token });
-
-      // Role bazlı yönlendirme
-      navigate(user.role === "admin" ? "/admin" : "/");
-    } catch (err) {
-      console.error("Login error:", err);
-      alert(err.response?.data?.error || "Giriş başarısız");
+    const result = await login({ email, password });
+    if (result.success) {
+      navigate(result.user.role === "admin" ? "/admin" : "/");
+    } else {
+      alert(result.error);
     }
   };
 
@@ -50,7 +41,11 @@ const LoginPage = () => {
           required
         />
 
-        <button type="submit">Giriş Yap</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Giriş Yapılıyor..." : "Giriş Yap"}
+        </button>
+
+        {error && <div className="error-message">{error}</div>}
 
         <div className="login-links-row">
           <Link to="/forgot-password">Şifremi Unuttum</Link>

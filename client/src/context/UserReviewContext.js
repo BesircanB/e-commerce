@@ -30,9 +30,9 @@ export const UserReviewProvider = ({ children }) => {
     }
   }, [token]);
 
-  const deleteUserReview = async (reviewId) => {
+  const deleteUserReview = async (productId, reviewId) => {
     try {
-      await axios.delete(`/reviews/${reviewId}`, {
+      await axios.delete(`/products/${productId}/reviews/${reviewId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -43,17 +43,16 @@ export const UserReviewProvider = ({ children }) => {
     }
   };
 
-  const updateUserReview = async (reviewId, { rating, comment, photo_url }) => {
+  const updateUserReview = async (productId, reviewId, { rating, comment, photo_url }) => {
     try {
       await axios.put(
-        `/reviews/${reviewId}`,
+        `/products/${productId}/reviews/${reviewId}`,
         { rating, comment, photo_url },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      // Güncel liste çekilmeden direkt güncelleme
       setUserReviews((prev) =>
         prev.map((r) =>
           r.id === reviewId ? { ...r, rating, comment, photo_url } : r
@@ -62,6 +61,22 @@ export const UserReviewProvider = ({ children }) => {
     } catch (err) {
       console.error("Güncelleme hatası:", err);
       setError("Yorum güncellenemedi.");
+    }
+  };
+
+  const createUserReview = async (productId, { rating, comment, photo_url }) => {
+    try {
+      const res = await axios.post(
+        `/products/${productId}/reviews`,
+        { rating, comment, photo_url },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setUserReviews((prev) => [...prev, res.data]);
+    } catch (err) {
+      console.error("Yorum eklenemedi:", err);
+      setError("Yorum eklenemedi.");
     }
   };
 
@@ -76,6 +91,7 @@ export const UserReviewProvider = ({ children }) => {
         fetchUserReviews,
         deleteUserReview,
         updateUserReview,
+        createUserReview,
       }}
     >
       {children}

@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header/Header";
-import { useAddress } from "../context/AddressContext";
 import { useOrders } from "../context/OrderContext";
 
 // Yeni bileşenler
@@ -12,26 +11,11 @@ import CartSummary from "../components/checkout/CartSummary";
 const CheckoutPage = () => {
   const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
-  const { address } = useAddress();
   const { addOrder } = useOrders();
 
-  useEffect(() => {
-    const isAddressEmpty =
-      !address.fullName ||
-      !address.street ||
-      !address.city ||
-      !address.postalCode ||
-      !address.country;
-
-    if (isAddressEmpty) {
-      alert("Lütfen önce profil sayfasından adres bilgilerinizi girin.");
-      navigate("/profile");
-    }
-  }, [address, navigate]);
-
   const [form, setForm] = useState({
-    name: address.fullName || "",
-    address: `${address.street}, ${address.city}, ${address.postalCode}, ${address.country}`,
+    name: "",
+    address: "",
     phone: "",
   });
 

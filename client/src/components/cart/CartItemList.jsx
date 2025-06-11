@@ -18,10 +18,10 @@ const CartItemList = ({ items, onDecrease, onIncrease, onRemove }) => {
           }}
         >
           <div>
-            <strong>{item.product.name}</strong>
+            <strong>{item.crud.name}</strong>
             <p>
-              {item.product.price} ₺ x {item.quantity} ={" "}
-              {(item.product.price * item.quantity).toFixed(2)} ₺
+              {item.crud.price} ₺ x {item.quantity} ={" "}
+              {(item.crud.price * item.quantity).toFixed(2)} ₺
             </p>
 
             <div>

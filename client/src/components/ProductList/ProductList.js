@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearch } from "../../context/SearchContext";
 import { useAuth } from "../../context/AuthContext";
-import { useProducts } from "../../context/ProductContext"; // ✅ context'ten veri
+import { useProduct } from "../../context/ProductContext"; // ✅ doğru context importu
 import "./ProductList.css";
 
 import FilterPanel from "./FilterPanel";
@@ -13,7 +13,7 @@ const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  const { products, loading, fetchProducts } = useProducts();
+  const { products, loading, fetchProducts } = useProduct(); // ✅ doğru hook
 
   const [selectedCategoryId, setSelectedCategoryId] = useState(propCategoryId);
   const [minPrice, setMinPrice] = useState(0);

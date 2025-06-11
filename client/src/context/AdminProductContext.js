@@ -8,56 +8,79 @@ export const useAdminProducts = () => useContext(AdminProductContext);
 export const AdminProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Admin ürünleri getir
   const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await axios.get("/products/admin/all");
-      setProducts(res.data.data || []);
+      setProducts(res.data);
     } catch (err) {
-      console.error("Ürünler alınamadı:", err);
+      setError("Ürünler alınamadı");
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Ürün ekle
   const addProduct = async (data) => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await axios.post("/products", data);
-      setProducts((prev) => [...prev, res.data]);
+      setProducts((prev) => [...prev, res.data.product || res.data]);
     } catch (err) {
-      console.error("Ürün eklenemedi:", err);
+      setError("Ürün eklenemedi");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Ürün güncelle
   const updateProduct = async (id, data) => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await axios.put(`/products/${id}`, data);
       setProducts((prev) =>
-        prev.map((p) => (p.id === id ? res.data : p))
+        prev.map((p) => (p.id === id ? res.data.product || res.data : p))
       );
     } catch (err) {
-      console.error("Ürün güncellenemedi:", err);
+      setError("Ürün güncellenemedi");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Ürün sil
   const deleteProduct = async (id) => {
+    setLoading(true);
+    setError(null);
     try {
       await axios.delete(`/products/${id}`);
       setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
-      console.error("Ürün silinemedi:", err);
+      setError("Ürün silinemedi");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const toggleVisibility = async (id) => {
+  // Ürün görünürlüğünü değiştir
+  const toggleVisibility = async (id, is_visible) => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await axios.patch(`/products/${id}/toggle`);
+      const res = await axios.put(`/products/admin/${id}/visibility`, { is_visible });
       setProducts((prev) =>
-        prev.map((p) => (p.id === id ? res.data : p))
+        prev.map((p) => (p.id === id ? res.data.product || res.data : p))
       );
     } catch (err) {
-      console.error("Görünürlük değiştirilemedi:", err);
+      setError("Görünürlük değiştirilemedi");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,6 +93,7 @@ export const AdminProductProvider = ({ children }) => {
       value={{
         products,
         loading,
+        error,
         fetchProducts,
         addProduct,
         updateProduct,

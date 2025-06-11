@@ -15,11 +15,12 @@ export const WishlistProvider = ({ children }) => {
       const res = await axios.get("/wishlist", {
         headers: { Authorization: `Bearer ${token}` }
       });
+      // Backend'den gelen veri: [{id, product: {id, name, image_url, price}}]
       const mapped = res.data.map((item) => ({
-        id: item.product_id,
-        name: item.crud.name,
-        price: item.crud.price,
-        image: item.crud.image_url
+        id: item.product.id,
+        name: item.product.name,
+        price: item.product.price,
+        image_url: item.product.image_url
       }));
       setWishlist(mapped);
     } catch (err) {

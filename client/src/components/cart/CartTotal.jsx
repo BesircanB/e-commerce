@@ -9,7 +9,7 @@ const CartTotal = ({
   onPlaceOrder,
 }) => {
   const originalTotal = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + (item.crud?.price || 0) * item.quantity,
     0
   );
 
