@@ -1,4 +1,4 @@
-const supabase = require("../../supabase");
+const supabase = require("../supabase");
 const { calculateTax, calculateNetRevenue } = require("../../utils/financeHelpers");
 
 async function fetchRevenueStats() {

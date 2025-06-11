@@ -9,7 +9,7 @@ async function getWishlist(userId) {
     .select(`
       id,
       product_id,
-      products (
+      crud (
         id,
         name,
         image_url,
@@ -22,7 +22,7 @@ async function getWishlist(userId) {
 
   return data.map(item => ({
     id: item.id,
-    product: formatWishlistProduct(item.products),
+    product: formatWishlistProduct(item.crud),
   }));
 }
 

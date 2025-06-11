@@ -1,4 +1,4 @@
-const supabase = require("../supabase");
+const { supabaseAdmin } = require("../supabase");
 const { restoreStock } = require("../../utils/stockHelpers");
 
 async function cancelOrder(orderId, userId, isAdmin = false) {
@@ -6,7 +6,7 @@ async function cancelOrder(orderId, userId, isAdmin = false) {
     throw new Error("Sipariş ID veya kullanıcı ID eksik");
   }
 
-  const { data: order, error: fetchError } = await supabase
+  const { data: order, error: fetchError } = await supabaseAdmin
     .from("orders")
     .select("id, user_id, status")
     .eq("id", orderId)
@@ -25,7 +25,7 @@ async function cancelOrder(orderId, userId, isAdmin = false) {
   }
 
   // order_items içinden ürünleri al
-  const { data: items, error: itemErr } = await supabase
+  const { data: items, error: itemErr } = await supabaseAdmin
     .from("order_items")
     .select("product_id, quantity")
     .eq("order_id", orderId);
@@ -38,21 +38,21 @@ async function cancelOrder(orderId, userId, isAdmin = false) {
   await restoreStock(items);
 
   // Kupon varsa aktif hale getir
-  const { data: couponCart } = await supabase
+  const { data: couponCart } = await supabaseAdmin
     .from("cart")
     .select("coupon_code")
     .eq("user_id", userId)
     .maybeSingle();
 
   if (couponCart?.coupon_code) {
-    await supabase
+    await supabaseAdmin
       .from("campaigns")
       .update({ is_active: true })
       .eq("code", couponCart.coupon_code);
   }
 
   // Siparişi iptal et
-  const { error: cancelErr } = await supabase
+  const { error: cancelErr } = await supabaseAdmin
     .from("orders")
     .update({ status: "cancelled" })
     .eq("id", orderId);

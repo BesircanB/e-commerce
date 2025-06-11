@@ -1,9 +1,9 @@
-const supabase = require("../supabase");
+const { supabaseAdmin } = require("../supabase");
 
 async function getOrderById(orderId, userId, isAdmin = false) {
   if (!orderId || !userId) throw new Error("Eksik parametre");
 
-  const query = supabase
+  const query = supabaseAdmin
     .from("orders")
     .select(`
       id,
@@ -17,11 +17,11 @@ async function getOrderById(orderId, userId, isAdmin = false) {
         id,
         quantity,
         unit_price,
-        products (
+        crud (
           id,
           name,
           price,
-          image
+          image_url
         )
       )
     `)

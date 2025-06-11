@@ -1,4 +1,4 @@
-const supabase = require("../supabase");
+const {supabaseAdmin} = require("../supabase");
 const { sanitizeProfileInput } = require("../../utils/userHelpers");
 
 async function updateProfile(userId, input) {
@@ -10,7 +10,7 @@ async function updateProfile(userId, input) {
     throw new Error("En az bir alan gönderilmelidir");
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("users")
     .update(updates)
     .eq("id", userId)

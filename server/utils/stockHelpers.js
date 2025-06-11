@@ -1,9 +1,9 @@
-const supabase = require("../services/supabase");
+const { supabaseAdmin } = require("../services/supabase");
 
 // 1. Stok yeterliliğini kontrol et (fırlatmalı)
 async function validateStock(cartItems) {
   for (const item of cartItems) {
-    const product = item.products;
+    const product = item.crud;
     if (!product) {
       throw new Error(`Ürün bulunamadı: ID ${item.product_id}`);
     }
@@ -16,9 +16,9 @@ async function validateStock(cartItems) {
 // 2. Stokları azalt (sepet tamamlandığında)
 async function decreaseStock(cartItems) {
   for (const item of cartItems) {
-    const newStock = item.products.stock - item.quantity;
+    const newStock = item.crud.stock - item.quantity;
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("crud")
       .update({ stock: newStock })
       .eq("id", item.product_id);
@@ -33,7 +33,7 @@ async function decreaseStock(cartItems) {
 async function restoreStock(orderItems) {
   for (const item of orderItems) {
     // Mevcut stok değerini al
-    const { data: product, error: fetchError } = await supabase
+    const { data: product, error: fetchError } = await supabaseAdmin
       .from("crud")
       .select("stock")
       .eq("id", item.product_id)
@@ -45,7 +45,7 @@ async function restoreStock(orderItems) {
 
     const newStock = product.stock + item.quantity;
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from("crud")
       .update({ stock: newStock })
       .eq("id", item.product_id);

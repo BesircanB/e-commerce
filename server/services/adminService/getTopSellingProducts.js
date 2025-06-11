@@ -1,4 +1,4 @@
-const supabase = require("../../supabase");
+const supabase = require("../supabase");
 const { countProductSales } = require("../../utils/productAnalytics");
 
 async function getTopSellingProducts(limit = 10) {
@@ -19,7 +19,7 @@ async function getTopSellingProducts(limit = 10) {
   if (prodErr) throw prodErr;
 
   return rankedSales.map(rank => {
-    const product = products.find(p => p.id === rank.product_id);
+    const product = products.find(p => String(p.id) === String(rank.product_id));
     return {
       ...rank,
       product: product || null,

@@ -1,5 +1,8 @@
 const productService = require("../services/productService");
 const searchService = require("../services/searchService");
+const supabase = require("../services/supabase");
+
+
 
 // ✅ Ürün oluştur (admin)
 async function createProduct(req, res) {
@@ -25,7 +28,8 @@ async function updateProduct(req, res) {
 // ✅ Tüm ürünleri getir (public)
 async function getAllProducts(req, res) {
   try {
-    const products = await productService.getAllVisibleProducts();
+    const filters = req.query;
+    const products = await productService.getAllProducts(filters);
     res.status(200).json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -82,7 +86,7 @@ async function deleteProduct(req, res) {
 // ✅ Kullanıcı tarafı ürün arama
 async function searchPublicProducts(req, res) {
   try {
-    const userId = req.user?.id || null;
+    const userId = req.user?.id || req.user?.userId;
     const products = await searchService.searchProductsPublic(userId, req.query);
     res.status(200).json(products);
   } catch (err) {
@@ -99,6 +103,71 @@ async function searchAdminProducts(req, res) {
     res.status(400).json({ error: err.message });
   }
 }
+// ✅ Tüm ürünleri getir (admin)
+async function getAllProductsAdmin(req, res) {
+  try {
+    const filters = req.query;
+    const products = await productService.getAllProductsAdmin(filters);
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// ✅ Ürün görünürlüğünü güncelle (admin)
+async function updateProductVisibility(req, res) {
+  try {
+    const id = Number(req.params.id);
+    const { is_visible } = req.body;
+
+    const updated = await productService.toggleVisibility(id, is_visible);
+    res.status(200).json({ message: "Görünürlük güncellendi", product: updated });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+// Kullanıcının ürünü satın alıp almadığını kontrol et
+async function checkIfUserPurchased(req, res) {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+    const productId = Number(req.params.id);
+    console.log("[checkIfUserPurchased] userId:", userId, "productId:", productId);
+    console.log("[checkIfUserPurchased] headers.authorization:", req.headers.authorization);
+
+    if (!userId || !productId) {
+      console.log("[checkIfUserPurchased] HATA: Geçersiz kullanıcı veya ürün ID");
+      return res.status(400).json({ error: "Geçersiz kullanıcı veya ürün ID" });
+    }
+
+    // 1. Kullanıcının siparişlerini bul
+    const { data: orders, error: ordersError } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("user_id", userId);
+
+    if (ordersError) throw new Error(ordersError.message);
+
+    const orderIds = (orders || []).map(o => o.id);
+    if (orderIds.length === 0) {
+      return res.status(200).json({ purchased: false });
+    }
+
+    // 2. Bu siparişlerde ilgili ürün var mı kontrol et
+    const { data: orderItems, error: itemsError } = await supabase
+      .from("order_items")
+      .select("id")
+      .in("order_id", orderIds)
+      .eq("product_id", productId);
+
+    if (itemsError) throw new Error(itemsError.message);
+
+    const hasPurchased = (orderItems || []).length > 0;
+    res.status(200).json({ purchased: hasPurchased });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 
 module.exports = {
   createProduct,
@@ -110,4 +179,7 @@ module.exports = {
   deleteProduct,
   searchPublicProducts,
   searchAdminProducts,
+  getAllProductsAdmin,
+  updateProductVisibility,
+  checkIfUserPurchased
 };

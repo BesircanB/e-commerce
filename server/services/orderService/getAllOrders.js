@@ -1,7 +1,7 @@
-const supabase = require("../supabase");
+const {supabaseAdmin} = require("../supabase");
 
 async function getAllOrders() {
-  const { data: orders, error } = await supabase
+  const { data: orders, error } = await supabaseAdmin
     .from("orders")
     .select(`
       id,
@@ -19,11 +19,11 @@ async function getAllOrders() {
         id,
         quantity,
         unit_price,
-        products (
+        crud (
           id,
           name,
           price,
-          image
+          image_url
         )
       )
     `)

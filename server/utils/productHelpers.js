@@ -29,5 +29,12 @@ function sanitizeProductInput(data) {
     stock: parseInt(data.stock),
     image_url: data.image_url?.trim() || null,
     is_visible: data.is_visible === false ? false : true,
+    category_id: data.category_id || null
   };
 }
+
+
+module.exports = {
+  validateProductInput,
+  sanitizeProductInput
+};

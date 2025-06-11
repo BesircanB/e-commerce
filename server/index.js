@@ -1,7 +1,7 @@
 // server/index.js
 
 const express = require("express");
-const cors    = require("cors");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
@@ -10,7 +10,37 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Supabase ve Test DB temizliği (test ortamında tabloları sıfırla)
+// 🌐 ROUTES
+const authRoutes       = require("./routes/auth");
+const userRoutes       = require("./routes/users");
+const productRoutes    = require("./routes/products");
+const cartRoutes       = require("./routes/cart");
+const orderRoutes      = require("./routes/orders");
+const reviewRoutes     = require("./routes/reviews");
+const adminRoutes      = require("./routes/admin");
+const categoryRoutes   = require("./routes/categories");
+const wishlistRoutes   = require("./routes/wishlist");
+const campaignRoutes   = require("./routes/campaigns");
+
+// ✅ API MOUNT
+app.use("/api/auth",       authRoutes);
+app.use("/api/users",      userRoutes);
+app.use("/api/products",   productRoutes);
+app.use("/api/cart",       cartRoutes);
+app.use("/api/orders",     orderRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin",      adminRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/wishlist",   wishlistRoutes);
+app.use("/api/admin",      campaignRoutes); // /api/admin/campaigns
+app.use("/api/campaigns",  campaignRoutes); // public campaign sorguları
+
+// ✅ Sağlık kontrolü
+app.get("/", (req, res) => {
+  res.send("E-commerce API anasayfasına hoş geldiniz!");
+});
+
+// 🧪 TEST ortamı veritabanı temizliği (isteğe bağlı)
 if (process.env.NODE_ENV === "test") {
   const supabase = require("./services/supabase");
   (async () => {
@@ -21,42 +51,11 @@ if (process.env.NODE_ENV === "test") {
   })();
 }
 
-// Route’lar
-const authRoutes       = require("./routes/auth");
-const userRoutes       = require("./routes/users");
-const productRoutes    = require("./routes/products");
-const cartRoutes       = require("./routes/cart");
-const orderRoutes      = require("./routes/orders");
-const reviewRoutes     = require("./routes/reviews"); // ✅ RESTful uyumlu hale getirildi
-const adminRoutes      = require("./routes/admin");
-const categoryRoutes   = require("./routes/categories");
-const wishlistRoutes   = require("./routes/wishlist");
-const campaignRoutes   = require("./routes/campaigns");
+// 🧯 GLOBAL ERROR HANDLER
+const errorHandler = require("./middleware/errorHandler");
+app.use(errorHandler);
 
-// RESTful API route mount işlemleri
-app.use("/api/auth",       authRoutes);
-app.use("/api/users",      userRoutes);
-app.use("/api/products",   productRoutes);
-app.use("/api/cart",       cartRoutes);
-app.use("/api/orders",     orderRoutes);
-app.use("/api",            reviewRoutes);     // ✅ Artık "/api/products/:id/reviews" gibi çalışır
-app.use("/api/admin",      adminRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/wishlist",   wishlistRoutes);
-app.use("/api/admin", campaignRoutes); // → /api/admin/campaigns
-app.use("/api/campaigns",  campaignRoutes);
-
-
-// Sağlık kontrolü
-app.get("/", (req, res) => res.send("E-commerce API anasayfasına hoş geldiniz!"));
-
-// Global hata yakalayıcı
-app.use((err, req, res, next) => {
-  console.error("Genel Hata Yakalayıcı:", err.stack);
-  res.status(500).json({ error: "Sunucu hatası oluştu" });
-});
-
-// Sunucuyu başlat (test değilse)
+// 🚀 Server başlat (test değilse)
 if (process.env.NODE_ENV !== "test") {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
@@ -64,5 +63,5 @@ if (process.env.NODE_ENV !== "test") {
   });
 }
 
-// Testler için export
+// ✅ Testler için app export edilir
 module.exports = app;

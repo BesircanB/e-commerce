@@ -1,4 +1,4 @@
-const supabase = require("../../supabase");
+const supabase = require("../supabase");
 const { groupRevenueByMonth } = require("../../utils/financeHelpers");
 
 async function fetchMonthlyRevenue() {

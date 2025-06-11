@@ -3,9 +3,15 @@ const userService = require("../services/userService");
 // GET /api/users/profile
 async function getProfile(req, res) {
   try {
-    const user = await userService.getProfile(req.user.id);
+    console.log("[USER] getProfile endpoint çağrıldı");
+    console.log("[USER] req.user:", req.user);
+    const userId = req.user.id || req.user.userId;
+    console.log("[USER] getProfile userId:", userId);
+    const user = await userService.getProfile(userId);
+    console.log("[USER] getProfile user: ", user);
     res.status(200).json(user);
   } catch (err) {
+    console.error("[USER] getProfile error:", err.message, err);
     res.status(404).json({ error: err.message });
   }
 }
@@ -13,17 +19,23 @@ async function getProfile(req, res) {
 // PUT /api/users/profile
 async function updateProfile(req, res) {
   try {
-    const updated = await userService.updateProfile(req.user.id, req.body);
+    // Hem id hem userId olasılığını kapsar
+    const userId = req.user.id || req.user.userId;
+    const updated = await userService.updateProfile(userId, req.body);
     res.status(200).json({ message: "Profil güncellendi", user: updated });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 }
 
+
 // PUT /api/users/change-password
 async function changePassword(req, res) {
   try {
-    const result = await userService.changePassword(req.user.id, req.body);
+
+
+    const userId = req.user.id || req.user.userId;
+    const result = await userService.changePassword(userId, req.body);
     res.status(200).json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });

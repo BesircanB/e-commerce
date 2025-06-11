@@ -5,20 +5,37 @@ const logSearchQuery = require("./logSearchQuery");
 async function searchProductsPublic(userId, queryParams) {
   const filters = sanitizeSearchInput(queryParams);
 
-  // Supabase query zinciri
-  let query = supabase
+  // 🔁 Supabase sorgusunu zincirlemeye uygun şekilde başlat
+  let queryBuilder = supabase
     .from("crud")
-    .select("id, name, description, price, image_url, category_id")
+    .select(`
+      id, name, description, price, image_url, stock, is_visible, category_id,
+      product_tags:product_tags (
+        tag_id,
+        tags:tags (name)
+      )
+    `)
+    .eq("is_visible", true)
     .order("created_at", { ascending: false });
 
-  query = buildSearchQuery(query, filters, false); // false → public search (visible=true)
+  // 🔧 Filtreleri uygula
+  queryBuilder = buildSearchQuery(queryBuilder, filters, false);
 
-  // Sorguyu çalıştır
-  const { data, error } = await query;
+  // 🔍 Test için log ekle
+  console.log("Uygulanan filtreler:", filters);
+
+  // 🧨 Sorguyu çalıştır
+  const { data, error } = await queryBuilder;
 
   if (error) throw error;
 
-  // Aramayı logla (kullanıcı giriş yapmışsa userId, değilse null)
+  // Her ürünün tag isimlerini düz bir diziye dönüştür
+  const result = data.map(product => ({
+    ...product,
+    tags: (product.product_tags || []).map(pt => pt.tags?.name).filter(Boolean)
+  }));
+
+  // Aramayı logla
   await logSearchQuery({
     userId,
     query: filters.q,
@@ -26,7 +43,7 @@ async function searchProductsPublic(userId, queryParams) {
     tag: filters.tag,
   });
 
-  return data;
+  return result;
 }
 
 module.exports = searchProductsPublic;

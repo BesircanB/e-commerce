@@ -12,10 +12,14 @@ async function getReviewsByProductId(req, res) {
 }
 
 // ✅ POST: Yorum oluştur
+
 async function createReview(req, res) {
   try {
     const productId = Number(req.params.product_id);
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
+    if (!userId || !productId) {
+      return res.status(400).json({ error: "Eksik kullanıcı veya ürün ID" });
+    }
     const created = await reviewService.createReview(userId, productId, req.body);
     res.status(201).json(created);
   } catch (err) {
@@ -23,10 +27,15 @@ async function createReview(req, res) {
   }
 }
 
+
+
+
+
 // ✅ PUT: Yorum güncelle
+
 async function updateReview(req, res) {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
     const productId = Number(req.params.product_id);
     const reviewId = Number(req.params.id);
     const updated = await reviewService.updateReview(userId, productId, reviewId, req.body);
@@ -39,9 +48,12 @@ async function updateReview(req, res) {
 // ✅ DELETE: Yorum sil
 async function deleteReview(req, res) {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
     const productId = Number(req.params.product_id);
     const reviewId = Number(req.params.id);
+    if (!userId || !productId || !reviewId) {
+      return res.status(400).json({ error: "Eksik kullanıcı, ürün veya yorum ID" });
+    }
     const result = await reviewService.deleteReview(userId, productId, reviewId);
     res.json(result);
   } catch (err) {
@@ -52,7 +64,10 @@ async function deleteReview(req, res) {
 // ✅ GET: Kullanıcının tüm yorumları
 async function getUserReviews(req, res) {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
+    if (!userId) {
+      return res.status(400).json({ error: "Kullanıcı kimliği eksik" });
+    }
     const reviews = await reviewService.getUserReviews(userId);
     res.status(200).json(reviews);
   } catch (err) {

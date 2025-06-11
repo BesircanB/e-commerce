@@ -34,19 +34,14 @@ async function getMonthlyRevenue(req, res) {
 // --- 🔍 Admin ürün arama
 async function searchAdminProducts(req, res) {
   try {
-    const keyword = req.query.q || "";
-    const category = req.query.category || "";
-    const result = await productService.searchProducts({
-      keyword,
-      category,
-      includeInvisible: true, // admin tüm ürünleri görebilir
-    });
-    return res.status(200).json(result);
+    const products = await require("../services/searchService").searchProductsAdmin(req.query);
+    return res.status(200).json(products);
   } catch (err) {
     console.error("searchAdminProducts error:", err.message);
     return res.status(500).json({ error: "Ürün araması yapılamadı" });
   }
 }
+
 async function getTopSelling(req, res) {
   try {
     const top = await adminService.getTopSellingProducts();
@@ -57,10 +52,21 @@ async function getTopSelling(req, res) {
   }
 }
 
+async function getTopWished(req, res) {
+  try {
+    const limit = Number(req.query.limit) || 10;
+    const result = await require("../services/adminService").getTopWishedProducts(limit);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
 
 module.exports = {
   getAdminMetrics,
   getRevenueStats,
   getMonthlyRevenue,
   searchAdminProducts,
+  getTopSelling,
+  getTopWished
 };

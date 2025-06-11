@@ -3,7 +3,7 @@ function calculateCartTotal(cartItems) {
   let discount = 0;
 
   for (const item of cartItems) {
-    const price = item.products?.price || 0;
+    const price = item.crud?.price || 0;
     total += price * item.quantity;
 
     // Gelecekte kupon tipi ve indirim oranına göre hesaplama yapılabilir

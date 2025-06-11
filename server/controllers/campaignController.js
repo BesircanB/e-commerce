@@ -14,7 +14,12 @@ async function createCampaign(req, res) {
 async function getAllCampaigns(req, res) {
   try {
     const onlyActive = req.query.onlyActive === "true";
-    const campaigns = await campaignService.getAllCampaigns({ onlyActive });
+    // Sıralama parametreleri opsiyonel olarak query'den alınabilir
+    const orderBy = req.query.orderBy || "start_date";
+    const ascending = req.query.ascending === "true";
+    const tagId = req.query.tagId ? Number(req.query.tagId) : undefined;
+    const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
+    const campaigns = await campaignService.getAllCampaigns({ onlyActive, orderBy, ascending, tagId, categoryId });
     res.status(200).json(campaigns);
   } catch (err) {
     res.status(500).json({ error: err.message });

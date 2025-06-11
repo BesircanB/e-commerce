@@ -8,6 +8,8 @@ const {
   getAdminMetrics,
   getRevenueStats,
   getMonthlyRevenue,
+  getTopSelling,
+  getTopWished
 } = require("../controllers/adminController");
 
 const productController = require("../controllers/productController");
@@ -26,5 +28,6 @@ router.get("/products/search", verifyToken, checkAdmin, productController.search
 
 router.get("/products/top-sellers", verifyToken, checkAdmin, getTopSelling);
 
+router.get("/products/top-wished", verifyToken, checkAdmin, getTopWished);
 
 module.exports = router;

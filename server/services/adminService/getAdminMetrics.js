@@ -1,4 +1,5 @@
-const supabase = require("../../supabase");
+const supabase = require("../supabase");
+
 
 const TAX_RATE = 0.2;
 
@@ -7,7 +8,7 @@ async function getAdminMetrics() {
     supabase.from("users").select("id"),
     supabase.from("orders").select("id, final_total, status"),
     supabase.from("campaigns").select("id").eq("is_active", true),
-    supabase.from("crud").select("id").eq("visible", true),
+    supabase.from("crud").select("id").eq("is_visible", true),
   ]);
 
   const totalUsers = users.data?.length || 0;

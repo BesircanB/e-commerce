@@ -5,7 +5,8 @@ const verifyToken = require("../middleware/verifyToken");
 const {
   addToWishlist,
   getWishlist,
-  removeFromWishlist
+  removeFromWishlist,
+  getMostWishlistedProducts
 } = require("../controllers/wishlistController");
 
 router.use(verifyToken);
@@ -13,5 +14,6 @@ router.use(verifyToken);
 router.post("/", addToWishlist);
 router.get("/", getWishlist);
 router.delete("/:product_id", removeFromWishlist);
+router.get("/most-wishlisted", getMostWishlistedProducts);
 
 module.exports = router;

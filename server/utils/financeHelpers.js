@@ -19,6 +19,15 @@ function groupRevenueByMonth(orders) {
     .map(([month, total]) => ({ month, total }))
     .sort((a, b) => new Date(a.month) - new Date(b.month));
 }
+function calculateTax(netRevenue) {
+  const TAX_RATE = 0.2; // %20 vergi
+  return Math.round(netRevenue * TAX_RATE * 100) / 100;
+}
+
+function calculateNetRevenue(orders) {
+  return orders.reduce((acc, o) => acc + (o.final_total || 0), 0);
+}
+
 
 module.exports = {
   calculateTax,

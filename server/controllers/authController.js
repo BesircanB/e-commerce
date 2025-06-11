@@ -1,50 +1,32 @@
 // server/controllers/authController.js
+
 const authService = require("../services/authService");
+const asyncHandler = require("../middleware/asyncHandler");
 
-async function register(req, res) {
-  try {
-    const user = await authService.register(req.body);
-    res.status(201).json({ message: "Kayıt başarılı", user });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
+const register = asyncHandler(async (req, res) => {
+  const user = await authService.register(req.body);
+  res.status(201).json({ message: "Kayıt başarılı", user });
+});
 
-async function login(req, res) {
-  try {
-    const { user, token } = await authService.login(req.body);
-    res.json({ message: "Giriş başarılı", token, user });
-  } catch (err) {
-    res.status(401).json({ error: err.message });
-  }
-}
+const login = asyncHandler(async (req, res) => {
+  const { user, token } = await authService.login(req.body);
+  res.json({ message: "Giriş başarılı", token, user });
+});
 
-async function googleLogin(req, res) {
-  try {
-    const { token, user } = await authService.googleLogin(req.body.credential);
-    res.json({ message: "Google login başarılı", token, user });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
+const googleLogin = asyncHandler(async (req, res) => {
+  const { token, user } = await authService.googleLogin(req.body.credential);
+  res.json({ message: "Google login başarılı", token, user });
+});
 
-async function forgotPassword(req, res) {
-  try {
-    await authService.forgotPassword(req.body.email);
-    res.json({ message: "Şifre sıfırlama bağlantısı gönderildi" });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-}
+const forgotPassword = asyncHandler(async (req, res) => {
+  await authService.forgotPassword(req.body.email);
+  res.json({ message: "Şifre sıfırlama bağlantısı gönderildi" });
+});
 
-async function resetPassword(req, res) {
-  try {
-    await authService.resetPassword(req.body.token, req.body.newPassword);
-    res.json({ message: "Şifre başarıyla güncellendi" });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-}
+const resetPassword = asyncHandler(async (req, res) => {
+  await authService.resetPassword(req.body.token, req.body.newPassword);
+  res.json({ message: "Şifre başarıyla güncellendi" });
+});
 
 module.exports = {
   register,
