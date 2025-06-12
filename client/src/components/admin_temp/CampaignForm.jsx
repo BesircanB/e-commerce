@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useCampaigns } from "../../context/CampaignContext";
 import { useCategories } from "../../context/CategoryContext";
+import { FiPlusCircle } from "react-icons/fi";
+import "../admin/AdminDashboard.css";
+import "./CampaignsModern.css";
 
 const CampaignForm = () => {
   const { addCampaign } = useCampaigns();
@@ -40,14 +43,15 @@ const CampaignForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={formStyle}>
-      <h3>Yeni Kampanya Ekle</h3>
+    <form onSubmit={handleSubmit} className="campaign-form-modern">
+      <h3 className="campaign-form-title">Yeni Kampanya Ekle</h3>
       <input
         type="text"
         name="name"
         placeholder="Kampanya Adı"
         value={form.name}
         onChange={handleChange}
+        className="campaign-input"
       />
       <input
         type="number"
@@ -55,6 +59,7 @@ const CampaignForm = () => {
         placeholder="İndirim (%)"
         value={form.discount_percent}
         onChange={handleChange}
+        className="campaign-input"
       />
       <input
         type="number"
@@ -62,8 +67,9 @@ const CampaignForm = () => {
         placeholder="Minimum Sipariş Tutarı (₺)"
         value={form.min_order_price}
         onChange={handleChange}
+        className="campaign-input"
       />
-      <select name="category_id" value={form.category_id} onChange={handleChange}>
+      <select name="category_id" value={form.category_id} onChange={handleChange} className="campaign-input">
         <option value="">Kategori Seç</option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.id}>
@@ -71,7 +77,9 @@ const CampaignForm = () => {
           </option>
         ))}
       </select>
-      <button type="submit">Ekle</button>
+      <button type="submit" className="campaign-btn">
+        <FiPlusCircle style={{ marginRight: 8, fontSize: 20 }} /> Ekle
+      </button>
     </form>
   );
 };

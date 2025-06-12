@@ -1,6 +1,9 @@
 import React from "react";
 import { useCampaigns } from "../../context/CampaignContext";
 import { useCategories } from "../../context/CategoryContext";
+import { FiTrash2, FiTag } from "react-icons/fi";
+import "../admin/AdminDashboard.css";
+import "./CampaignsModern.css";
 
 const CampaignList = () => {
   const { campaigns, deleteCampaign } = useCampaigns();
@@ -16,14 +19,21 @@ const CampaignList = () => {
   }
 
   return (
-    <div style={gridStyle}>
+    <div className="campaigns-grid-modern">
       {campaigns.map((camp) => (
-        <div key={camp.id} style={cardStyle}>
-          <h4>{camp.name}</h4>
-          <p><strong>İndirim:</strong> %{camp.discount_percent}</p>
-          <p><strong>Min. Tutar:</strong> {camp.min_order_price || 0} ₺</p>
-          <p><strong>Kategori:</strong> {getCategoryName(camp.category_id)}</p>
-          <button onClick={() => deleteCampaign(camp.id)}>Sil</button>
+        <div key={camp.id} className="campaign-card-modern">
+          <div className="campaign-card-header">
+            <FiTag className="campaign-card-icon" />
+            <h4 className="campaign-card-title">{camp.name}</h4>
+          </div>
+          <div className="campaign-card-info">
+            <span><strong>İndirim:</strong> %{camp.discount_percent}</span>
+            <span><strong>Min. Tutar:</strong> {camp.min_order_price || 0} ₺</span>
+            <span><strong>Kategori:</strong> {getCategoryName(camp.category_id)}</span>
+          </div>
+          <button className="campaign-btn danger" onClick={() => deleteCampaign(camp.id)}>
+            <FiTrash2 style={{ marginRight: 6, fontSize: 18 }} /> Sil
+          </button>
         </div>
       ))}
     </div>

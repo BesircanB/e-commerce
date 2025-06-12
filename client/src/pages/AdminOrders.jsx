@@ -1,28 +1,30 @@
 import React from "react";
 import { useAdminOrders } from "../context/AdminOrdersContext";
 import AdminOrderCard from "../components/admin_temp/AdminOrderCard";
-import Header from "../components/Header/Header"; // ✅ Eklendi
+import Footer from "../components/Footer/Footer";
 
 const AdminOrders = () => {
   const { orders, loading, refetch } = useAdminOrders();
 
-  if (loading) return <><Header /><p style={{ padding: "2rem" }}>Yükleniyor...</p></>;
+  if (loading) return <p style={{ padding: "2rem" }}>Yükleniyor...</p>;
 
   return (
     <>
-      <Header /> {/* ✅ Eklendi */}
-      <div style={{ padding: "2rem" }}>
-        <h2>Admin Siparişler</h2>
-        <button onClick={refetch} style={buttonStyle}>🔄 Yenile</button>
+      <div className="admin-dashboard-container">
+        <main className="admin-dashboard-main">
+          <h2>Admin Siparişler</h2>
+          <button onClick={refetch} style={buttonStyle}>🔄 Yenile</button>
 
-        {orders.length === 0 ? (
-          <p>Hiç sipariş bulunamadı.</p>
-        ) : (
-          orders.map((order) => (
-            <AdminOrderCard key={order.id} order={order} />
-          ))
-        )}
+          {orders.length === 0 ? (
+            <p>Hiç sipariş bulunamadı.</p>
+          ) : (
+            orders.map((order) => (
+              <AdminOrderCard key={order.id} order={order} />
+            ))
+          )}
+        </main>
       </div>
+      <Footer />
     </>
   );
 };

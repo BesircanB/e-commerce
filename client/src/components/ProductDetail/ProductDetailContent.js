@@ -4,6 +4,8 @@ import ProductImageModal from "./ProductImageModal";
 import ProductInfoCard from "./ProductInfoCard";
 import ProductActionButtons from "./ProductActionButtons";
 import ProductReviews from "../ProductReviews/ProductReviews";
+import SimilarProductsSection from "./SimilarProductsSection";
+import "./ProductDetailContent.css";
 
 const ProductDetailContent = () => {
   const {
@@ -15,34 +17,32 @@ const ProductDetailContent = () => {
   } = useProductDetail();
 
   if (loading) {
-    return <p style={{ padding: "2rem" }}>Yükleniyor...</p>;
+    return <div className="product-detail-loading">Yükleniyor...</div>;
   }
 
   if (!product) {
-    return <p style={{ padding: "2rem" }}>Ürün bulunamadı.</p>;
+    return <div className="product-detail-loading">Ürün bulunamadı.</div>;
   }
 
   return (
-    <div>
-      {/* Ürün görsel ve bilgi */}
-      <div style={{ padding: "2rem", display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-        <img
-          src={product.image_url}
-          alt={product.name}
-          style={{ width: "300px", borderRadius: "8px", cursor: "pointer" }}
-          onClick={() => setImageModalOpen(true)}
-        />
-        <div style={{ flex: 1 }}>
+    <div className="product-detail-main">
+      <div className="product-detail-card">
+        <div className="product-detail-image-area">
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="product-detail-image"
+            onClick={() => setImageModalOpen(true)}
+          />
+        </div>
+        <div className="product-detail-info-area">
           <ProductInfoCard product={product} hasPurchased={hasPurchased} />
           <ProductActionButtons product={product} />
         </div>
       </div>
-
-      {/* Görsel modal */}
       {isImageModalOpen && <ProductImageModal />}
-
-      {/* Yorumlar */}
-      <div style={{ padding: "2rem" }}>
+      <SimilarProductsSection product={product} />
+      <div className="product-detail-reviews-area">
         <ProductReviews
           productId={product.id}
           averageRating={product.averageRating || 0}

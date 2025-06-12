@@ -5,19 +5,21 @@ const ProductFormFields = ({ product, onChange }) => {
   const { categories } = useCategories();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+    <div className="product-form-fields-modern">
       <input
         type="text"
         name="name"
         placeholder="Ürün Adı"
         value={product.name}
         onChange={onChange}
+        className="product-input"
       />
       <textarea
         name="description"
         placeholder="Açıklama"
         value={product.description}
         onChange={onChange}
+        className="product-input"
       />
       <input
         type="number"
@@ -25,6 +27,7 @@ const ProductFormFields = ({ product, onChange }) => {
         placeholder="Fiyat (₺)"
         value={product.price}
         onChange={onChange}
+        className="product-input"
       />
       <input
         type="number"
@@ -32,6 +35,7 @@ const ProductFormFields = ({ product, onChange }) => {
         placeholder="Stok"
         value={product.stock}
         onChange={onChange}
+        className="product-input"
       />
       <input
         type="text"
@@ -39,8 +43,9 @@ const ProductFormFields = ({ product, onChange }) => {
         placeholder="Görsel URL"
         value={product.image_url}
         onChange={onChange}
+        className="product-input"
       />
-      <select name="category_id" value={product.category_id} onChange={onChange}>
+      <select name="category_id" value={product.category_id} onChange={onChange} className="product-input">
         <option value="">Kategori Seç</option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.id}>

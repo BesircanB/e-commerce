@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import Header from "../components/Header/Header";
-import { useNavigate } from "react-router-dom";
-import axios from "../services/axiosInstance";
+import { useUserProfile } from "../context/UserProfileContext";
+import ProfileSidebar from "../components/ProfileSidebar";
+import "../components/ProfilePageModern.css";
 
 const ProfilePage = () => {
-  const { user, updateUser } = useAuth();
-  const navigate = useNavigate();
-
+  const { user, updateUser, logout } = useAuth();
+  const { updateProfile } = useUserProfile();
+  const [selected, setSelected] = useState("account");
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -18,83 +18,73 @@ const ProfilePage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
-  const toggleEdit = () => setEditing((prev) => !prev);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await axios.put("/users/profile", formData);
-      updateUser(res.data.user); // AuthContext güncelle
+    const { name, phone, address } = formData;
+    const result = await updateProfile({ name, phone, address });
+    if (result.success) {
+      updateUser({ ...user, name, phone, address });
       setEditing(false);
       alert("Profil güncellendi");
-    } catch (err) {
-      console.error("Profil güncelleme hatası:", err);
-      alert(err.response?.data?.error || "Bir hata oluştu");
+    } else {
+      alert(result.message || "Profil güncellenemedi");
     }
   };
 
   return (
     <div>
-      <Header />
-      <div style={{ padding: "2rem" }}>
-        <h2>Profilim</h2>
-
-        {editing ? (
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Ad Soyad"
-            />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="E-posta"
-            />
-            <input
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Telefon"
-            />
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Adres"
-            />
-            <button type="submit">Kaydet</button>
-            <button type="button" onClick={toggleEdit}>
-              Vazgeç
-            </button>
-          </form>
-        ) : (
-          <div>
-            <p><strong>Ad Soyad:</strong> {user?.name}</p>
-            <p><strong>Email:</strong> {user?.email}</p>
-            <p><strong>Telefon:</strong> {user?.phone || "-"}</p>
-            <p><strong>Adres:</strong> {user?.address || "-"}</p>
-
-            <div style={{ marginTop: "1rem" }}>
-              <button onClick={toggleEdit}>Profili Düzenle</button>
-              <button onClick={() => navigate("/change-password")}>Şifre Değiştir</button>
-              <button onClick={() => navigate("/orders")}>Siparişlerim</button>
-              <button onClick={() => navigate("/profile/my-reviews")}>Yorumlarım</button> {/* ✅ eklendi */}
+      <div className="profile-modern-container">
+        <ProfileSidebar selected={selected} setSelected={setSelected} logout={logout} user={user} />
+        <div className="profile-modern-content">
+          {selected === "account" && (
+            <div>
+              <h2>Hesap Bilgilerim</h2>
+              {editing ? (
+                <form className="profile-form" onSubmit={handleSubmit}>
+                  <div className="profile-form-row">
+                    <div className="profile-form-group">
+                      <label>Ad Soyad</label>
+                      <input type="text" name="name" value={formData.name} onChange={handleChange} />
+                    </div>
+                    <div className="profile-form-group">
+                      <label>Email</label>
+                      <input type="email" name="email" value={formData.email} readOnly tabIndex={-1} style={{ background: '#f5f7fa', color: '#888' }} />
+                    </div>
+                  </div>
+                  <div className="profile-form-row">
+                    <div className="profile-form-group">
+                      <label>Telefon</label>
+                      <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
+                    </div>
+                    <div className="profile-form-group">
+                      <label>Adres</label>
+                      <input type="text" name="address" value={formData.address} onChange={handleChange} />
+                    </div>
+                  </div>
+                  <div className="profile-form-actions">
+                    <button type="submit" className="profile-btn-primary">Kaydet</button>
+                    <button type="button" className="profile-btn-secondary" onClick={() => setEditing(false)}>Vazgeç</button>
+                  </div>
+                </form>
+              ) : (
+                <div className="profile-info-view">
+                  <div><b>Ad Soyad:</b> {user?.name}</div>
+                  <div><b>Email:</b> {user?.email}</div>
+                  <div><b>Telefon:</b> {user?.phone || "-"}</div>
+                  <div><b>Adres:</b> {user?.address || "-"}</div>
+                  <button className="profile-btn-primary" onClick={() => setEditing(true)}>Profili Düzenle</button>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+          {selected === "orders" && <div><h2>Siparişlerim</h2><p>Burada siparişleriniz listelenecek.</p></div>}
+          {selected === "addresses" && <div><h2>Adreslerim</h2><p>Burada adresleriniz listelenecek.</p></div>}
+          {selected === "draws" && <div><h2>Çekilişlerim</h2><p>Burada çekilişleriniz listelenecek.</p></div>}
+          {selected === "reviews" && <div><h2>Yorumlarım</h2><p>Burada yorumlarınız listelenecek.</p></div>}
+        </div>
       </div>
     </div>
   );

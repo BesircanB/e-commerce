@@ -1,0 +1,48 @@
+.product-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 1.2rem;
+}
+
+.fav-btn {
+  background: none;
+  border: none;
+  font-size: 2.2rem;
+  cursor: pointer;
+  transition: transform 0.15s, color 0.15s;
+  color: #bbb;
+  padding: 0.2rem 0.4rem;
+  border-radius: 50%;
+  outline: none;
+}
+.fav-btn.active {
+  color: #e53935;
+  transform: scale(1.15);
+}
+.fav-btn:hover {
+  color: #e53935;
+  background: #fbe9e7;
+}
+
+.add-cart-btn {
+  background: #1e88e5;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 1.2rem;
+  padding: 0.7rem 2.2rem;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s;
+  box-shadow: 0 1px 8px rgba(30,136,229,0.07);
+}
+.add-cart-btn:disabled {
+  background: #eee;
+  color: #aaa;
+  cursor: not-allowed;
+}
+.add-cart-btn:not(:disabled):hover {
+  background: #1565c0;
+  transform: translateY(-2px) scale(1.04);
+} 

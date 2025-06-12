@@ -37,3 +37,26 @@
   background: #e8f5e9;
   font-weight: bold;
 }
+
+.product-list-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+  min-height: 70vh;
+  padding: 1.5rem 0.5rem 2rem 0.5rem;
+}
+.product-list-grid-area {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+@media (max-width: 900px) {
+  .product-list-layout {
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 0.7rem 0.2rem 1.2rem 0.2rem;
+  }
+  .product-list-grid-area {
+    width: 100%;
+  }
+}

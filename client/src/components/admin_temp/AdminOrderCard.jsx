@@ -1,5 +1,7 @@
 import React from "react";
 import { useAdminOrders } from "../../context/AdminOrdersContext";
+import { FiRefreshCw } from "react-icons/fi";
+import "./AdminOrderCardModern.css";
 
 const AdminOrderCard = ({ order }) => {
   const { updateOrderStatus } = useAdminOrders();
@@ -10,32 +12,24 @@ const AdminOrderCard = ({ order }) => {
   };
 
   return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        padding: "1rem",
-        marginBottom: "1.5rem",
-        backgroundColor: "#fdfdfd",
-      }}
-    >
-      <h4 style={{ marginBottom: "0.5rem" }}>
-        Sipariş #{order.id} – {order.user?.name || "Kullanıcı Yok"}
-      </h4>
-      <p>
-        <strong>Tutar:</strong> {order.total_amount.toFixed(2)} ₺
-      </p>
-      <p>
-        <strong>Tarih:</strong>{" "}
-        {new Date(order.created_at).toLocaleString("tr-TR")}
-      </p>
-
-      <div style={{ marginTop: "0.5rem" }}>
+    <div className="admin-order-card-modern">
+      <div className="admin-order-card-header">
+        <h4>
+          <span className="admin-order-id">Sipariş #{order.id}</span> – <span className="admin-order-user">{order.user?.name || "Kullanıcı Yok"}</span>
+        </h4>
+        <span className={`admin-order-status status-${order.status}`}>{order.status}</span>
+      </div>
+      <div className="admin-order-card-info">
+        <span><strong>Tutar:</strong> {typeof order.total_amount === "number" ? order.total_amount.toFixed(2) : "-"} ₺</span>
+        <span><strong>Tarih:</strong> {order.created_at ? new Date(order.created_at).toLocaleString("tr-TR") : "-"}</span>
+      </div>
+      <div className="admin-order-card-actions">
         <label htmlFor={`status-${order.id}`}>Durum: </label>
         <select
           id={`status-${order.id}`}
           value={order.status}
           onChange={handleStatusChange}
+          className="admin-order-status-select"
         >
           <option value="hazırlanıyor">Hazırlanıyor</option>
           <option value="kargoya verildi">Kargoya Verildi</option>
@@ -43,14 +37,13 @@ const AdminOrderCard = ({ order }) => {
           <option value="iptal edildi">İptal Edildi</option>
         </select>
       </div>
-
-      <hr style={{ margin: "1rem 0" }} />
-
-      <ul>
+      <hr className="admin-order-divider" />
+      <ul className="admin-order-items-list">
         {order.order_items?.map((item) => (
           <li key={item.id}>
-            {item.product?.name} – {item.quantity} adet –{" "}
-            {(item.product?.price * item.quantity).toFixed(2)} ₺
+            <span className="admin-order-item-name">{item.product?.name || "Ürün Yok"}</span> – <span className="admin-order-item-qty">{item.quantity} adet</span> – <span className="admin-order-item-price">{typeof item.product?.price === "number"
+              ? (item.product.price * item.quantity).toFixed(2)
+              : "-"} ₺</span>
           </li>
         ))}
       </ul>

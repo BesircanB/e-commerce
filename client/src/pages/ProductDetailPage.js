@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProductDetail } from "../context/ProductDetailContext";
 import Header from "../components/Header/Header";
@@ -16,8 +16,9 @@ const ProductDetailPage = () => {
 
   return (
     <div>
-      <Header />
-      <ProductDetailContent />
+      <div className="product-detail-container">
+        <ProductDetailContent />
+      </div>
     </div>
   );
 };

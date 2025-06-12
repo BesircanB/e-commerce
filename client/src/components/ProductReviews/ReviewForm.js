@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useReviews } from "../../context/ReviewContext";
 import { useNavigate } from "react-router-dom";
+import "./ReviewForm.css";
 
 const ReviewForm = ({ productId }) => {
   const { user } = useAuth();
@@ -20,9 +21,9 @@ const ReviewForm = ({ productId }) => {
 
   if (!user) {
     return (
-      <div style={{ marginTop: "2rem" }}>
+      <div className="review-form-login">
         <p>Yorum yapmak için giriş yapmalısınız.</p>
-        <button onClick={() => navigate("/login")}>Giriş Yap</button>
+        <button className="review-form-login-btn" onClick={() => navigate("/login")}>Giriş Yap</button>
       </div>
     );
   }
@@ -37,52 +38,42 @@ const ReviewForm = ({ productId }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: "2rem" }}>
-      <h4>{userReview ? "Yorumunu Güncelle" : "Yorum Yap"}</h4>
-
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+    <form className="review-form" onSubmit={handleSubmit}>
+      <h4 className="review-form-title">{userReview ? "Yorumunu Güncelle" : "Yorum Yap"}</h4>
+      <div className="review-form-stars">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             type="button"
             key={star}
             onClick={() => setRating(star)}
-            style={{
-              fontSize: "1.5rem",
-              color: star <= rating ? "orange" : "lightgray",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-            }}
+            className={`star-btn${star <= rating ? " active" : ""}`}
+            aria-label={`${star} yıldız`}
           >
             ★
           </button>
         ))}
       </div>
-
       <textarea
         rows={3}
         placeholder="Yorumunuzu yazın..."
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        style={{ width: "100%", marginBottom: "1rem" }}
+        className="review-form-textarea"
       />
-
       <input
         type="text"
         placeholder="Fotoğraf URL (isteğe bağlı)"
         value={photoUrl}
         onChange={(e) => setPhotoUrl(e.target.value)}
-        style={{ width: "100%", marginBottom: "1rem" }}
+        className="review-form-input"
       />
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <button type="submit" disabled={loading}>
+      {error && <p className="review-form-error">{error}</p>}
+      <div className="review-form-btn-row">
+        <button type="submit" className="review-form-submit-btn" disabled={loading}>
           {userReview ? "Güncelle" : "Gönder"}
         </button>
         {userReview && (
-          <button type="button" onClick={handleDelete} disabled={loading} style={{ color: "red" }}>
+          <button type="button" className="review-form-delete-btn" onClick={handleDelete} disabled={loading}>
             Sil
           </button>
         )}

@@ -1,5 +1,6 @@
 import React from "react";
 import { useCategories } from "../../context/CategoryContext";
+import "./ProductInfoCard.css";
 
 const ProductInfoCard = ({ product, hasPurchased }) => {
   const { categories } = useCategories();
@@ -7,22 +8,18 @@ const ProductInfoCard = ({ product, hasPurchased }) => {
   const categoryName = category ? category.name : "—";
 
   return (
-    <div>
-      <h2>{product.name}</h2>
-      <p><strong>Kategori:</strong> {categoryName}</p>
-      <p>{product.description || "Ürün açıklaması mevcut değil."}</p>
-      <h3>{product.price.toFixed(2)} ₺</h3>
-
-      {product.stock <= 0 ? (
-        <p style={{ color: "red", fontWeight: "bold" }}>Tükendi</p>
-      ) : (
-        <p><strong>Stok:</strong> {product.stock}</p>
-      )}
-
+    <div className="product-info-card">
+      <h1 className="product-info-title">{product.name}</h1>
+      <div className="product-info-category">Kategori: <span>{categoryName}</span></div>
+      <div className="product-info-desc">{product.description || "Ürün açıklaması mevcut değil."}</div>
+      <div className="product-info-price-row">
+        <span className="product-info-price">{product.price.toFixed(2)} ₺</span>
+        <span className={`product-info-stock ${product.stock <= 0 ? "out" : "in"}`}>
+          {product.stock <= 0 ? "Tükendi" : `Stok: ${product.stock}`}
+        </span>
+      </div>
       {hasPurchased && (
-        <p style={{ color: "green", fontWeight: "bold", marginTop: "0.5rem" }}>
-          Bu ürünü daha önce satın aldınız.
-        </p>
+        <div className="product-info-purchased">Bu ürünü daha önce satın aldınız.</div>
       )}
     </div>
   );

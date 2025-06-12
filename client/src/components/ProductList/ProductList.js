@@ -2,26 +2,28 @@
 import React, { useEffect, useState } from "react";
 import { useSearch } from "../../context/SearchContext";
 import { useAuth } from "../../context/AuthContext";
-import { useProduct } from "../../context/ProductContext"; // ✅ doğru context importu
+import { useProduct } from "../../context/ProductContext";
+import { useCategories } from "../../context/CategoryContext";
 import "./ProductList.css";
 
-import FilterPanel from "./FilterPanel";
+import ProductFilterSidebar from "./ProductFilterSidebar";
 import ProductGrid from "./ProductGrid";
 
 const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
   const { searchTerm } = useSearch();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-
-  const { products, loading, fetchProducts } = useProduct(); // ✅ doğru hook
+  const { categories } = useCategories();
+  const { products, loading, fetchProducts } = useProduct();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState(propCategoryId);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [sortOption, setSortOption] = useState("Varsayılan");
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   useEffect(() => {
-    fetchProducts(isAdmin); // ✅ kullanıcı tipine göre fetch
+    fetchProducts(isAdmin);
   }, [fetchProducts, isAdmin]);
 
   useEffect(() => {
@@ -32,9 +34,10 @@ const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
 
   const filtered = products
     .filter((p) => isAdmin || p.is_visible)
-    .filter((p) => selectedCategoryId === null || p.category_id === selectedCategoryId)
+    .filter((p) => selectedCategoryId === null || p.category_id === Number(selectedCategoryId))
     .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((p) => p.price >= minPrice && p.price <= maxPrice)
+    .filter((p) => !inStockOnly || p.stock > 0)
     .sort((a, b) => {
       if (sortOption === "Artan") return a.price - b.price;
       if (sortOption === "Azalan") return b.price - a.price;
@@ -46,6 +49,7 @@ const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
     setMinPrice(0);
     setMaxPrice(10000);
     setSortOption("Varsayılan");
+    setInStockOnly(false);
   };
 
   const handleEdit = (product) => console.log("Düzenle", product);
@@ -55,24 +59,30 @@ const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
   if (loading) return <p style={{ padding: "2rem" }}>Ürünler yükleniyor...</p>;
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <FilterPanel
+    <div className="product-list-layout">
+      <ProductFilterSidebar
+        categories={categories}
+        selectedCategory={selectedCategoryId}
+        onCategoryChange={setSelectedCategoryId}
         minPrice={minPrice}
         maxPrice={maxPrice}
-        sortOption={sortOption}
         onMinPriceChange={setMinPrice}
         onMaxPriceChange={setMaxPrice}
+        sortOption={sortOption}
         onSortChange={setSortOption}
+        inStockOnly={inStockOnly}
+        onInStockChange={setInStockOnly}
         onResetFilters={handleResetFilters}
       />
-
-      <ProductGrid
-        products={filtered}
-        isAdmin={isAdmin}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleVisibility={handleToggleVisibility}
-      />
+      <div className="product-list-grid-area">
+        <ProductGrid
+          products={filtered}
+          isAdmin={isAdmin}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggleVisibility={handleToggleVisibility}
+        />
+      </div>
     </div>
   );
 };

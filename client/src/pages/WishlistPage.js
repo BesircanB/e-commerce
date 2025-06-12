@@ -1,24 +1,22 @@
 import React from "react";
 import { useWishlist } from "../context/WishlistContext";
 import ProductCard from "../components/ProductCard/ProductCard";
-import Header from "../components/Header/Header";
+import "./WishlistPage.css";
 
 const WishlistPage = () => {
   const { wishlist } = useWishlist();
 
   return (
-    <div>
-      <Header />
-      <div style={{ padding: "2rem" }}>
-        <h2>Favorilerim</h2>
-
+    <div className="wishlist-page-root">
+      <div className="wishlist-page-main">
+        <h2 className="wishlist-title">Favorilerim</h2>
         {wishlist.length === 0 ? (
-          <div style={{ marginTop: "2rem" }}>
+          <div className="wishlist-empty">
             <p>Henüz favori ürününüz bulunmamaktadır.</p>
             <p>Ürünleri favorilere eklemek için kalp simgesine tıklayın.</p>
           </div>
         ) : (
-          <div className="product-grid">
+          <div className="wishlist-grid">
             {wishlist.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

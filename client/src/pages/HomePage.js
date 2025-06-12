@@ -1,8 +1,10 @@
 import React from "react";
-import Header from "../components/Header/Header";
 import { useCategories } from "../context/CategoryContext";
 import { useNavigate } from "react-router-dom";
-import ProductList from "../components/ProductList/ProductList"; // ✅ ürünleri göstermek için eklendi
+import Slider from "../components/Slider/Slider";
+import Footer from "../components/Footer/Footer";
+import ShopByCategorySection from "../components/ShopByCategorySection";
+import BestSellersSection from "../components/BestSellersSection";
 
 const HomePage = () => {
   const { categories } = useCategories();
@@ -10,43 +12,12 @@ const HomePage = () => {
 
   return (
     <div>
-      <Header />
-
       <main className="homepage-main">
-        <h2 style={{ textAlign: "center", marginTop: "1rem" }}>
-          Hoş Geldiniz 👋
-        </h2>
-
-        {/* ✅ Kategori Butonları */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "0.5rem",
-            justifyContent: "center",
-            margin: "1rem 0",
-          }}
-        >
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => navigate(`/category/${cat.id}`)}
-              style={{
-                padding: "0.4rem 1rem",
-                borderRadius: "5px",
-                border: "1px solid #ccc",
-                background: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-
-        {/* ✅ Tüm Ürünler Gösterilir */}
-        <ProductList />
+        <Slider />
+        <ShopByCategorySection categories={categories} onCategoryClick={id => navigate(`/category/${id}`)} />
+        <BestSellersSection />
       </main>
+      <Footer />
     </div>
   );
 };

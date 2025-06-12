@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useCategories } from "../../context/CategoryContext";
+import { FiPlusCircle } from "react-icons/fi";
+import "./CategoryManagerModern.css";
 
 const CategoryForm = () => {
   const { addCategory } = useCategories();
@@ -13,15 +15,17 @@ const CategoryForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "1rem" }}>
+    <form onSubmit={handleSubmit} className="category-form-modern">
       <input
         type="text"
         placeholder="Yeni kategori adı"
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
-        style={{ marginRight: "0.5rem" }}
+        className="category-input"
       />
-      <button type="submit">➕ Ekle</button>
+      <button type="submit" className="category-btn">
+        <FiPlusCircle style={{ marginRight: 8, fontSize: 20 }} /> Ekle
+      </button>
     </form>
   );
 };

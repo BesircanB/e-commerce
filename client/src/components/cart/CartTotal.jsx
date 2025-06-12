@@ -15,27 +15,25 @@ const CartTotal = ({
 
   return (
     <div style={{ marginTop: "2rem" }}>
-      <div style={{ fontWeight: "bold" }}>
-        <p>Ara Toplam: {originalTotal.toFixed(2)} ₺</p>
-        <p>İndirimli Toplam: {total.toFixed(2)} ₺</p>
-      </div>
+      <ul className="summary-list">
+        <li>
+          <span>Ara Toplam:</span>
+          <span>{originalTotal.toFixed(2)} ₺</span>
+        </li>
+        <li>
+          <span>İndirimli Toplam:</span>
+          <span className="summary-total">{total.toFixed(2)} ₺</span>
+        </li>
+      </ul>
 
-      <button onClick={onClear} style={{ marginTop: "1rem" }}>
+      <button className="cart-action-btn ghost" onClick={onClear}>
         Sepeti Temizle
       </button>
 
       <button
+        className="cart-action-btn primary"
         onClick={onPlaceOrder}
         disabled={loading}
-        style={{
-          marginTop: "1rem",
-          backgroundColor: "#28a745",
-          color: "white",
-          padding: "0.5rem 1rem",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-        }}
       >
         {loading ? "Sipariş oluşturuluyor..." : "Siparişi Tamamla"}
       </button>

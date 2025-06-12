@@ -13,13 +13,14 @@ const CategoryPage = () => {
 
   return (
     <div>
-      <Header />
-      <main style={{ padding: "1rem" }}>
-        <h2>
-          {currentCategory ? currentCategory.name : "Kategori"} Ürünleri
-        </h2>
-        <ProductList selectedCategoryId={categoryId} />
-      </main>
+      <div className="category-container">
+        <main style={{ padding: "1rem" }}>
+          <h2>
+            {currentCategory ? currentCategory.name : "Kategori"} Ürünleri
+          </h2>
+          <ProductList selectedCategoryId={categoryId} />
+        </main>
+      </div>
     </div>
   );
 };

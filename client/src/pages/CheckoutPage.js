@@ -60,8 +60,7 @@ const CheckoutPage = () => {
 
   return (
     <div>
-      <Header />
-      <div style={{ padding: "2rem" }}>
+      <div className="checkout-container">
         <h2>Siparişi Tamamla</h2>
 
         <CheckoutForm form={form} onChange={handleChange} onSubmit={handleSubmit} />

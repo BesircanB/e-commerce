@@ -1,12 +1,11 @@
 import React from "react";
-import Header from "../Header/Header";
+import { useUserReviews } from "../../context/UserReviewContext";
 import UserReviewList from "./UserReviewList";
 
 const MyReviewsPage = () => {
   return (
     <div>
-      <Header />
-      <div style={{ padding: "2rem" }}>
+      <div className="reviews-container">
         <h2>Yorumlarım</h2>
         <UserReviewList />
       </div>

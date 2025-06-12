@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useAdminProducts } from "../../context/AdminProductContext";
 import { useAdminUI } from "../../context/AdminUIContext";
 import ProductFormFields from "./ProductFormFields";
+import { FiSave, FiXCircle } from "react-icons/fi";
+import "./ProductFormModern.css";
 
 const ProductForm = ({ onClose }) => {
   const { addProduct, updateProduct } = useAdminProducts();
@@ -68,14 +70,16 @@ const ProductForm = ({ onClose }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={formStyle}>
-      <h3>{editingProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h3>
-
+    <form onSubmit={handleSubmit} className="product-form-modern">
+      <h3 className="product-form-title">{editingProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h3>
       <ProductFormFields product={formData} onChange={handleChange} />
-
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-        <button type="submit">{editingProduct ? "Güncelle" : "Kaydet"}</button>
-        <button type="button" onClick={handleCancel}>İptal</button>
+      <div className="product-form-actions">
+        <button type="submit" className="product-btn">
+          <FiSave style={{ marginRight: 8, fontSize: 20 }} /> {editingProduct ? "Güncelle" : "Kaydet"}
+        </button>
+        <button type="button" className="product-btn danger" onClick={handleCancel}>
+          <FiXCircle style={{ marginRight: 8, fontSize: 20 }} /> İptal
+        </button>
       </div>
     </form>
   );
