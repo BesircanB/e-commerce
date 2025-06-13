@@ -60,6 +60,28 @@ export const CampaignProvider = ({ children }) => {
     }
   };
 
+  // Kategoriye göre kampanyaları çek
+  const fetchCampaignsByCategory = async (categoryId) => {
+    try {
+      const res = await axios.get(`/campaigns?categoryId=${categoryId}`);
+      return res.data || [];
+    } catch (err) {
+      console.error("Kategoriye göre kampanyalar alınamadı:", err);
+      return [];
+    }
+  };
+
+  // Etikete göre kampanyaları çek
+  const fetchCampaignsByTag = async (tagId) => {
+    try {
+      const res = await axios.get(`/campaigns?tagId=${tagId}`);
+      return res.data || [];
+    } catch (err) {
+      console.error("Etikete göre kampanyalar alınamadı:", err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     fetchCampaigns();
   }, []);
@@ -72,6 +94,8 @@ export const CampaignProvider = ({ children }) => {
         updateCampaign,
         deleteCampaign,
         fetchCampaigns,
+        fetchCampaignsByCategory,
+        fetchCampaignsByTag,
       }}
     >
       {children}

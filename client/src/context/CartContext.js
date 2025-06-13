@@ -5,7 +5,7 @@ import { useAuth } from "./AuthContext";
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [cartItems, setCartItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -17,14 +17,23 @@ export const CartProvider = ({ children }) => {
   const [autoDiscount, setAutoDiscount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Sepeti sunucudan getir
+  // Sepeti temizle
+  const clearCartState = () => {
+    setCartItems([]);
+    setTotal(0);
+    setDiscount(0);
+    setFinalTotal(0);
+    setAppliedCouponCampaign(null);
+    setAppliedAutoCampaign(null);
+    setCouponDiscount(0);
+    setAutoDiscount(0);
+  };
+
+  // Sepeti sunucudan getir - hem kayıtlı hem kayıtlı olmayan kullanıcılar için
   const getCart = async () => {
-    if (!token) return;
     setLoading(true);
     try {
-      const res = await axios.get("/cart", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get("/cart");
 
       setCartItems(res.data.items || []);
       setTotal(res.data.total || 0);
@@ -36,108 +45,133 @@ export const CartProvider = ({ children }) => {
       setAutoDiscount(res.data.autoDiscount || 0);
     } catch (err) {
       console.error("Sepet alınamadı:", err);
+      clearCartState();
     } finally {
       setLoading(false);
     }
   };
 
   const addToCart = async (productId) => {
-    if (!token) return;
     try {
-      await axios.post(
-        "/cart",
-        { product_id: productId, quantity: 1 },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post("/cart", { product_id: productId, quantity: 1 });
       await getCart();
+      return { success: true, message: "Ürün sepete eklendi" };
     } catch (err) {
       console.error("Ürün sepete eklenemedi:", err);
+      const errorMessage = err.response?.data?.error || "Ürün sepete eklenirken bir hata oluştu.";
+      return { success: false, message: errorMessage };
     }
   };
 
   const increaseQuantity = async (cartItemId) => {
-    if (!token) return;
     try {
       const item = cartItems.find((item) => item.id === cartItemId);
-      if (!item) return;
+      if (!item) return { success: false, message: "Ürün bulunamadı" };
 
-      await axios.put(
-        `/cart/${cartItemId}`,
-        { quantity: item.quantity + 1 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`/cart/${cartItemId}`, { quantity: item.quantity + 1 });
       await getCart();
+      return { success: true };
     } catch (err) {
       console.error("Adet artırılamadı:", err);
+      return { success: false, message: err.response?.data?.error || "Adet artırılamadı" };
     }
   };
 
   const decreaseQuantity = async (cartItemId) => {
-    if (!token) return;
     try {
       const item = cartItems.find((item) => item.id === cartItemId);
-      if (!item) return;
+      if (!item) return { success: false, message: "Ürün bulunamadı" };
 
       if (item.quantity === 1) {
-        await removeFromCart(cartItemId);
+        return await removeFromCart(cartItemId);
       } else {
-        await axios.put(
-          `/cart/${cartItemId}`,
-          { quantity: item.quantity - 1 },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        await axios.put(`/cart/${cartItemId}`, { quantity: item.quantity - 1 });
+        await getCart();
+        return { success: true };
       }
-
-      await getCart();
     } catch (err) {
       console.error("Adet azaltılamadı:", err);
+      return { success: false, message: err.response?.data?.error || "Adet azaltılamadı" };
     }
   };
 
-  const removeFromCart = async (productId) => {
-    if (!token) return;
+  const removeFromCart = async (cartItemId) => {
     try {
-      await axios.delete(`/cart/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`/cart/${cartItemId}`);
       await getCart();
+      return { success: true, message: "Ürün sepetten kaldırıldı" };
     } catch (err) {
       console.error("Ürün sepetten silinemedi:", err);
+      return { success: false, message: err.response?.data?.error || "Ürün sepetten silinemedi" };
     }
   };
 
   const clearCart = async () => {
-    if (!token) return;
     try {
-      await axios.delete("/cart", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete("/cart");
       await getCart();
+      return { success: true, message: "Sepet temizlendi" };
     } catch (err) {
       console.error("Sepet temizlenemedi:", err);
+      return { success: false, message: err.response?.data?.error || "Sepet temizlenemedi" };
     }
   };
 
-  // Kupon/kampanya uygula
+  // Kupon/kampanya uygula - sadece kayıtlı kullanıcılar için
   const applyCampaign = async (code) => {
-    if (!token) return { success: false, message: "Giriş yapmalısınız" };
+    if (!token) {
+      return { 
+        success: false, 
+        message: "Kampanya uygulamak için giriş yapmalısınız" 
+      };
+    }
+    
     try {
-      await axios.post(
-        "/cart/apply-coupon",
-        { couponCode: code },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post("/cart/apply-coupon", { couponCode: code });
       await getCart();
-      return { success: true };
+      return { success: true, message: "Kampanya başarıyla uygulandı" };
     } catch (err) {
       console.error("Kampanya uygulanamadı:", err);
       return {
         success: false,
         message: err.response?.data?.error || "Kampanya kodu geçerli değil",
+      };
+    }
+  };
+
+  // Sipariş oluştur
+  const createOrder = async (orderData) => {
+    if (!token) {
+      return { 
+        success: false, 
+        message: "Sipariş vermek için giriş yapmalısınız" 
+      };
+    }
+
+    try {
+      const response = await axios.post("/orders", {
+        ...orderData,
+        items: cartItems.map(item => ({
+          product_id: item.crud.id,
+          quantity: item.quantity,
+          unit_price: item.crud.price
+        })),
+        total_amount: finalTotal
+      });
+      
+      // Sipariş başarılı olursa sepeti temizle
+      await clearCart();
+      
+      return { 
+        success: true, 
+        message: "Sipariş başarıyla oluşturuldu",
+        orderId: response.data.id 
+      };
+    } catch (err) {
+      console.error("Sipariş oluşturulamadı:", err);
+      return {
+        success: false,
+        message: err.response?.data?.error || "Sipariş oluşturulurken bir hata oluştu",
       };
     }
   };
@@ -152,9 +186,14 @@ export const CartProvider = ({ children }) => {
       : null,
   };
 
+  // Kullanıcı durumu değiştiğinde sepeti getir
   useEffect(() => {
-    getCart();
-  }, [token]);
+    const timeoutId = setTimeout(() => {
+      getCart();
+    }, 100); // Kısa delay ile session/token'ın hazır olmasını bekle
+
+    return () => clearTimeout(timeoutId);
+  }, [token]); // token değiştiğinde sepeti yeniden getir
 
   return (
     <CartContext.Provider
@@ -176,6 +215,12 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         clearCart,
         applyCampaign,
+        createOrder,
+        // Computed values
+        itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        isEmpty: cartItems.length === 0,
+        hasDiscount: discount > 0,
+        isGuest: !token
       }}
     >
       {children}

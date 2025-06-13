@@ -1,30 +1,88 @@
 // src/components/cart/CouponBox.jsx
 import React, { useState } from "react";
 
-const CouponBox = ({ onApply }) => {
-  const [couponCode, setCouponCode] = useState("");
+const CouponBox = ({ onApply, value, onChange }) => {
+  const [couponCode, setCouponCode] = useState(value || "");
   const [message, setMessage] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
 
   const handleApply = async () => {
-    const result = await onApply(couponCode);
-    if (result.success) {
-      setMessage("✅ Kupon başarıyla uygulandı.");
-    } else {
-      setMessage("❌ " + result.message);
+    if (!couponCode.trim()) {
+      setMessage("Lütfen bir kupon kodu giriniz.");
+      return;
+    }
+
+    setIsApplying(true);
+    setMessage("");
+    
+    try {
+      const result = await onApply(couponCode);
+      if (result.success) {
+        setMessage("✅ Kupon başarıyla uygulandı!");
+        setCouponCode("");
+        if (onChange) onChange("");
+      } else {
+        setMessage("❌ " + result.message);
+      }
+    } catch (error) {
+      setMessage("❌ Kupon uygulanırken bir hata oluştu.");
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setCouponCode(value);
+    if (onChange) onChange(value);
+    if (message) setMessage(""); // Mesajı temizle
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleApply();
     }
   };
 
   return (
-    <div style={{ marginTop: "2rem" }}>
-      <input
-        type="text"
-        placeholder="Kupon Kodu Giriniz"
-        value={couponCode}
-        onChange={(e) => setCouponCode(e.target.value)}
-        style={{ padding: "0.5rem", marginRight: "0.5rem" }}
-      />
-      <button onClick={handleApply}>Uygula</button>
-      {message && <p>{message}</p>}
+    <div className="coupon-section">
+      <h4 className="coupon-title">Kupon Kodu</h4>
+      
+      <div className="coupon-input-group">
+        <input
+          type="text"
+          className="coupon-input"
+          placeholder="Kupon kodunuzu giriniz"
+          value={value !== undefined ? value : couponCode}
+          onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
+          disabled={isApplying}
+        />
+        <button 
+          className="coupon-apply-btn"
+          onClick={handleApply}
+          disabled={isApplying || !couponCode.trim()}
+        >
+          {isApplying ? (
+            <>
+              <span className="spinner"></span>
+              Uygulanıyor...
+            </>
+          ) : (
+            "Uygula"
+          )}
+        </button>
+      </div>
+
+      {message && (
+        <div className={`coupon-message ${message.includes('✅') ? 'success' : 'error'}`}>
+          {message}
+        </div>
+      )}
+
+      <div className="coupon-info">
+        <p>💡 Kupon kodlarınız ile %10'a varan indirimler kazanın!</p>
+      </div>
     </div>
   );
 };

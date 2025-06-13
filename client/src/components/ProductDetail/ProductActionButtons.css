@@ -1,8 +1,9 @@
 .product-action-buttons {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  margin-top: 1.2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
 }
 
 .fav-btn {
@@ -26,23 +27,92 @@
 }
 
 .add-cart-btn {
-  background: #1e88e5;
-  color: #fff;
-  font-size: 1.1rem;
+  padding: 0.7rem 2.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   border: none;
-  border-radius: 1.2rem;
-  padding: 0.7rem 2.2rem;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+  color: #fff;
   cursor: pointer;
-  transition: background 0.18s, transform 0.15s;
-  box-shadow: 0 1px 8px rgba(30,136,229,0.07);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+  margin-left: auto;
+  min-width: 160px;
+  max-width: 220px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .add-cart-btn:disabled {
-  background: #eee;
-  color: #aaa;
+  background: #e5e7eb;
+  color: #b0b4ba;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.variant-selectors {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.variant-dropdown {
+  padding: 0.6rem 1.2rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 1rem;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  min-width: 160px;
+  max-width: 220px;
+  cursor: pointer;
+}
+
+.variant-dropdown:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #60a5fa33;
+}
+
+.variant-dropdown:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
   cursor: not-allowed;
 }
-.add-cart-btn:not(:disabled):hover {
-  background: #1565c0;
-  transform: translateY(-2px) scale(1.04);
+
+.variant-stock-info {
+  font-size: 0.95rem;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+  margin-left: 2px;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .product-action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .add-cart-btn {
+    width: 100%;
+    margin-left: 0;
+    max-width: 100%;
+  }
+  .variant-selectors {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .variant-dropdown {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
 } 

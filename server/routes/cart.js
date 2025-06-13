@@ -1,6 +1,7 @@
 const express     = require("express");
 const router      = express.Router();
 const verifyToken = require("../middleware/verifyToken");
+const verifyTokenOrSession = require("../middleware/verifyTokenOrSession");
 
 // Controller fonksiyonlarını içe aktar
 const cartController = require("../controllers/cartController");
@@ -12,6 +13,7 @@ console.log("typeof cartController.getCart:", typeof cartController.getCart);
 console.log("typeof cartController.updateCartItem:", typeof cartController.updateCartItem);
 console.log("typeof cartController.deleteCartItem:", typeof cartController.deleteCartItem);
 console.log("typeof verifyToken:", typeof verifyToken);
+console.log("typeof verifyTokenOrSession:", typeof verifyTokenOrSession);
 
 const {
   addToCart,
@@ -22,8 +24,8 @@ const {
   clearCart 
 } = cartController;
 
-// Tüm cart rotaları için JWT doğrulama
-router.use(verifyToken);
+// Sepet operasyonları için hem kayıtlı hem kayıtlı olmayan kullanıcıları destekle
+router.use(verifyTokenOrSession);
 
 // POST /cart → Sepete ürün ekle
 if (typeof addToCart !== 'function') console.error("HATA: addToCart bir fonksiyon değil!");
@@ -41,10 +43,10 @@ router.put("/:id", updateCartItem);
 if (typeof deleteCartItem !== 'function') console.error("HATA: deleteCartItem bir fonksiyon değil!");
 router.delete("/:id", deleteCartItem);
 
-router.post("/apply-coupon",applyCouponToCart);
+// Kupon uygulamak için kayıtlı kullanıcı gerekli
+router.post("/apply-coupon", verifyToken, applyCouponToCart);
 
-router.delete("/", clearCart); // sepeti direkt sil
-
-
+// DELETE /cart → sepeti direkt sil
+router.delete("/", clearCart);
 
 module.exports = router;

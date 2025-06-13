@@ -9,7 +9,7 @@ import "./ProductList.css";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import ProductGrid from "./ProductGrid";
 
-const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
+const ProductList = ({ selectedCategoryId: propCategoryId = null, selectedTagId: propTagId = null }) => {
   const { searchTerm } = useSearch();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -17,6 +17,7 @@ const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
   const { products, loading, fetchProducts } = useProduct();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState(propCategoryId);
+  const [selectedTagId, setSelectedTagId] = useState(propTagId);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [sortOption, setSortOption] = useState("Varsayılan");
@@ -30,11 +31,15 @@ const ProductList = ({ selectedCategoryId: propCategoryId = null }) => {
     if (propCategoryId !== null) {
       setSelectedCategoryId(propCategoryId);
     }
-  }, [propCategoryId]);
+    if (propTagId !== null) {
+      setSelectedTagId(propTagId);
+    }
+  }, [propCategoryId, propTagId]);
 
   const filtered = products
     .filter((p) => isAdmin || p.is_visible)
     .filter((p) => selectedCategoryId === null || p.category_id === Number(selectedCategoryId))
+    .filter((p) => selectedTagId === null || (Array.isArray(p.tag_ids) && p.tag_ids.includes(Number(selectedTagId))))
     .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((p) => p.price >= minPrice && p.price <= maxPrice)
     .filter((p) => !inStockOnly || p.stock > 0)

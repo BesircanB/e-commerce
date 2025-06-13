@@ -1,22 +1,26 @@
 const { supabaseAdmin } = require("../supabase");
 
-async function removeFromCart({ userId, productId }) {
-  if (!userId || !productId) {
-    throw new Error("Eksik parametre: userId veya productId");
+async function removeFromCart({ userId, cartItemId }) {
+  if (!userId || !cartItemId) {
+    throw new Error("Kullanıcı ID ve sepet öğesi ID gereklidir");
   }
+
+  const isGuest = userId.startsWith('guest_');
+  const tableName = isGuest ? 'session_carts' : 'cart';
+  const userField = isGuest ? 'session_id' : 'user_id';
 
   const { error } = await supabaseAdmin
-    .from("cart")
+    .from(tableName)
     .delete()
-    .eq("user_id", userId)
-    .eq("product_id", productId);
+    .eq("id", cartItemId)
+    .eq(userField, userId);
 
   if (error) {
-    console.error("Delete error:", error);
-    throw new Error("Sepetten ürün silinemedi");
+    console.error("Remove from cart error:", error);
+    throw new Error("Ürün sepetten silinemedi");
   }
 
-  return { message: "Ürün sepetten silindi" };
+  return { message: "Ürün sepetten kaldırıldı" };
 }
 
 module.exports = removeFromCart;

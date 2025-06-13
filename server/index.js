@@ -21,6 +21,9 @@ const adminRoutes      = require("./routes/admin");
 const categoryRoutes   = require("./routes/categories");
 const wishlistRoutes   = require("./routes/wishlist");
 const campaignRoutes   = require("./routes/campaigns");
+const productModelRoutes = require('./routes/productModelRoutes');
+const productModelColorRoutes = require('./routes/productModelColorRoutes');
+const tagRoutes = require("./routes/tags");
 
 // ✅ API MOUNT
 app.use("/api/auth",       authRoutes);
@@ -34,6 +37,9 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/wishlist",   wishlistRoutes);
 app.use("/api/admin",      campaignRoutes); // /api/admin/campaigns
 app.use("/api/campaigns",  campaignRoutes); // public campaign sorguları
+app.use('/api', productModelRoutes);
+app.use('/api', productModelColorRoutes);
+app.use("/api/tags", tagRoutes);
 
 // ✅ Sağlık kontrolü
 app.get("/", (req, res) => {

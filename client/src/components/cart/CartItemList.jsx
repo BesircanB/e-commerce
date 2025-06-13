@@ -2,27 +2,69 @@
 import React from "react";
 
 const CartItemList = ({ items, onDecrease, onIncrease, onRemove }) => {
-  if (!items.length) return <p style={{color:'#888',fontSize:'1.1rem',marginTop:'2rem'}}>Sepetiniz boş.</p>;
+  if (!items.length) {
+    return (
+      <div className="empty-cart-message">
+        <p>Sepetinizde henüz ürün bulunmamaktadır.</p>
+      </div>
+    );
+  }
 
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+    <div className="cart-items-container">
       {items.map((item) => (
-        <li key={item.id} className="cart-item-card">
+        <div key={item.id} className="cart-item-card">
+          <img 
+            src={item.crud.image_url || "/placeholder-image.png"} 
+            alt={item.crud.name}
+            className="cart-item-img"
+            onError={(e) => {
+              e.target.src = "/placeholder-image.png";
+            }}
+          />
+          
           <div className="cart-item-info">
-            <span className="cart-item-name">{item.crud.name}</span>
-            <span className="cart-item-price">
-              {item.crud.price} ₺ x {item.quantity} = {(item.crud.price * item.quantity).toFixed(2)} ₺
-            </span>
-            <div className="cart-item-qty">
-              <button className="qty-btn" onClick={() => onDecrease(item.id)} aria-label="Azalt">–</button>
-              <span style={{fontWeight:600}}>{item.quantity}</span>
-              <button className="qty-btn" onClick={() => onIncrease(item.id)} aria-label="Arttır">+</button>
-            </div>
+            <h4 className="cart-item-name">{item.crud.name}</h4>
+            <p className="cart-item-price">{item.crud.price.toLocaleString()} ₺</p>
+            <p className="cart-item-description">
+              {item.crud.description?.slice(0, 80)}...
+            </p>
           </div>
-          <button className="cart-item-remove" onClick={() => onRemove(item.id)} aria-label="Kaldır">Kaldır</button>
-        </li>
+
+          <div className="cart-item-qty">
+            <button 
+              className="qty-btn" 
+              onClick={() => onDecrease(item.id)} 
+              aria-label="Azalt"
+              disabled={item.quantity <= 1}
+            >
+              –
+            </button>
+            <span className="qty-display">{item.quantity}</span>
+            <button 
+              className="qty-btn" 
+              onClick={() => onIncrease(item.id)} 
+              aria-label="Arttır"
+            >
+              +
+            </button>
+          </div>
+
+          <div className="cart-item-total">
+            {(item.crud.price * item.quantity).toLocaleString()} ₺
+          </div>
+
+          <button 
+            className="cart-item-remove" 
+            onClick={() => onRemove(item.id)} 
+            aria-label="Ürünü sepetten kaldır"
+            title="Sepetten Kaldır"
+          >
+            ✕
+          </button>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 };
 

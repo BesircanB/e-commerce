@@ -30,9 +30,9 @@ async function addToCart(req, res) {
 async function updateCartItem(req, res) {
   try {
     const userId = req.user.userId || req.user.id;
-    const productId = req.params.id;
+    const cartItemId = req.params.id;
     const { quantity } = req.body;
-    const result = await cartService.updateCartItem({ userId, productId, quantity });
+    const result = await cartService.updateCartItem({ userId, cartItemId, quantity });
     res.status(200).json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -43,8 +43,8 @@ async function updateCartItem(req, res) {
 async function deleteCartItem(req, res) {
   try {
     const userId = req.user.userId || req.user.id;
-    const productId = req.params.id;
-    const result = await cartService.removeFromCart({ userId, productId });
+    const cartItemId = req.params.id;
+    const result = await cartService.removeFromCart({ userId, cartItemId });
     res.status(200).json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });

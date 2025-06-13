@@ -30,6 +30,10 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
+      
+      // Guest session'ı temizle
+      axios.clearSessionId();
+      
       return { success: true, user: data.user };
     } catch (err) {
       setError(err.response?.data?.error || "Giriş başarısız");
@@ -49,6 +53,10 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
+      
+      // Guest session'ı temizle
+      axios.clearSessionId();
+      
       return { success: true, user: data.user };
     } catch (err) {
       setError(err.response?.data?.error || "Kayıt başarısız");
@@ -68,6 +76,10 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
+      
+      // Guest session'ı temizle
+      axios.clearSessionId();
+      
       return { success: true, user: data.user };
     } catch (err) {
       setError(err.response?.data?.error || "Google ile giriş başarısız");
@@ -113,6 +125,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    // Session ID'yi temizleme - yeni guest session başlayacak
   };
 
   // Kullanıcı güncelle (ör: profil güncelleme)

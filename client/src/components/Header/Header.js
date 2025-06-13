@@ -3,14 +3,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useProduct } from "../../context/ProductContext";
-import { FiShoppingCart, FiHeart, FiPackage, FiUser, FiSearch, FiSettings, FiLogOut, FiBarChart2 } from "react-icons/fi";
+import { FiShoppingCart, FiHeart, FiPackage, FiUser, FiSearch, FiSettings, FiLogOut, FiBarChart2, FiBox, FiGift, FiLayers } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import "./Header.css";
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const { cartItems } = useCart();
+  const { cartItems, itemCount } = useCart();
   const { wishlist } = useWishlist();
   const { searchProducts, products } = useProduct();
   const [search, setSearch] = useState("");
@@ -58,15 +58,31 @@ const Header = () => {
       <header className="header">
         <div className="header-left">
           <Link to="/admin" className="header-logo">Dijital Kare</Link>
+          <nav className="nav-links">
+            <Link to="/admin" className="nav-link">
+              <FiBox className="icon" />
+              <span>Ürünler</span>
+            </Link>
+            <Link to="/admin/orders" className="nav-link">
+              <FiPackage className="icon" />
+              <span>Siparişler</span>
+            </Link>
+            <Link to="/admin/campaigns" className="nav-link">
+              <FiGift className="icon" />
+              <span>Kampanyalar</span>
+            </Link>
+            <Link to="/admin/categories" className="nav-link">
+              <FiLayers className="icon" />
+              <span>Kategoriler</span>
+            </Link>
+            <Link to="/admin/dashboard" className="nav-link">
+              <FiBarChart2 className="icon" />
+              <span>İstatistikler</span>
+            </Link>
+          </nav>
         </div>
-        <nav className="header-nav">
-          <Link to="/admin">Ürünler</Link>
-          <Link to="/admin/orders">Siparişler</Link>
-          <Link to="/admin/campaigns">Kampanyalar</Link>
-          <Link to="/admin/categories">Kategoriler</Link>
-          <Link to="/admin/dashboard">İstatistikler</Link>
-        </nav>
-        <div className="header-right">
+
+        <div className="header-center">
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
@@ -79,6 +95,9 @@ const Header = () => {
               <FiSearch />
             </button>
           </form>
+        </div>
+
+        <div className="header-right">
           <div className="profile-dropdown" ref={dropdownRef}>
             <button className="profile-btn" onClick={() => setShowDropdown(!showDropdown)}>
               <FiUser className="icon" />
@@ -152,10 +171,12 @@ const Header = () => {
       <div className="header-right">
         {user ? (
           <>
-            <Link to="/cart" className="nav-link">
-              <FiShoppingCart className="icon" />
+            <Link to="/cart" className="nav-link cart-link">
+              <div className="cart-wrapper">
+                <FiShoppingCart className="icon" />
+                <span className="badge">{itemCount}</span>
+              </div>
               <span>Sepetim</span>
-              {cartItems.length > 0 && <span className="badge">{cartItems.length}</span>}
             </Link>
             
             <Link to="/wishlist" className="nav-link">
@@ -197,6 +218,13 @@ const Header = () => {
           </>
         ) : (
           <>
+            <Link to="/cart" className="nav-link cart-link">
+              <div className="cart-wrapper">
+                <FiShoppingCart className="icon" />
+                <span className="badge">{itemCount}</span>
+              </div>
+              <span>Sepetim</span>
+            </Link>
             <Link to="/login" className="nav-link">Giriş</Link>
             <Link to="/register" className="nav-link register-btn">Kayıt Ol</Link>
           </>
