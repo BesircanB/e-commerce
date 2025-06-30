@@ -57,12 +57,28 @@ export const UserProfileProvider = ({ children }) => {
     }
   };
 
+  // Şifreyi güncelle
+  const updatePassword = async ({ oldPassword, newPassword }) => {
+    if (!token) return { success: false, message: "Giriş yapmalısınız" };
+    try {
+      await axios.put(
+        "/users/change-password",
+        { oldPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return { success: true };
+    } catch (err) {
+      console.error("Şifre güncellenemedi:", err);
+      return { success: false, message: err.response?.data?.error || "Hata oluştu" };
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [token]);
 
   return (
-    <UserProfileContext.Provider value={{ profile, loading, fetchProfile, updateProfile, updateAddress }}>
+    <UserProfileContext.Provider value={{ profile, loading, fetchProfile, updateProfile, updateAddress, updatePassword }}>
       {children}
     </UserProfileContext.Provider>
   );

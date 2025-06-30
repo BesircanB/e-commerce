@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useProduct } from "../../context/ProductContext";
-import { FiShoppingCart, FiHeart, FiPackage, FiUser, FiSearch, FiSettings, FiLogOut, FiBarChart2, FiBox, FiGift, FiLayers } from "react-icons/fi";
+import { FiShoppingCart, FiHeart, FiPackage, FiUser, FiSearch, FiSettings, FiLogOut, FiBarChart2, FiBox, FiGift, FiLayers, FiKey } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import "./Header.css";
@@ -58,6 +58,18 @@ const Header = () => {
       <header className="header">
         <div className="header-left">
           <Link to="/admin" className="header-logo">Dijital Kare</Link>
+        </div>
+        <div className="header-center">
+          <form className="search-form">
+            <input
+              type="text"
+              placeholder="Ürün, sipariş, kampanya ara..."
+              className="search-input"
+            />
+            <button type="submit" className="search-button">ARA</button>
+          </form>
+        </div>
+        <div className="header-right">
           <nav className="nav-links">
             <Link to="/admin" className="nav-link">
               <FiBox className="icon" />
@@ -67,6 +79,10 @@ const Header = () => {
               <FiPackage className="icon" />
               <span>Siparişler</span>
             </Link>
+            <Link to="/admin/dashboard" className="nav-link">
+              <FiBarChart2 className="icon" />
+              <span>İstatistikler</span>
+            </Link>
             <Link to="/admin/campaigns" className="nav-link">
               <FiGift className="icon" />
               <span>Kampanyalar</span>
@@ -75,51 +91,36 @@ const Header = () => {
               <FiLayers className="icon" />
               <span>Kategoriler</span>
             </Link>
-            <Link to="/admin/dashboard" className="nav-link">
-              <FiBarChart2 className="icon" />
-              <span>İstatistikler</span>
-            </Link>
+            <div className="profile-menu" ref={profileRef}>
+              <button 
+                className="profile-btn"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+              >
+                <FiUser className="icon" />
+                <span>Profil</span>
+              </button>
+              {showProfileMenu && (
+                <div className="dropdown-menu">
+                  <Link to="/admin/profile" className="dropdown-item">
+                    <FiUser className="dropdown-icon" />
+                    <span>Profil</span>
+                  </Link>
+                  <Link to="/admin/dashboard" className="dropdown-item">
+                    <FiBarChart2 className="dropdown-icon" />
+                    <span>Dashboard</span>
+                  </Link>
+                  <Link to="/admin/change-password" className="dropdown-item">
+                    <FiKey className="dropdown-icon" />
+                    <span>Şifre Değiştir</span>
+                  </Link>
+                  <button onClick={logout} className="dropdown-item logout-btn">
+                    <FiLogOut className="dropdown-icon" />
+                    <span>Çıkış</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
-        </div>
-
-        <div className="header-center">
-          <form onSubmit={handleSearch} className="search-form">
-            <input
-              type="text"
-              placeholder="Ara..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            <button type="submit" className="search-button">
-              <FiSearch />
-            </button>
-          </form>
-        </div>
-
-        <div className="header-right">
-          <div className="profile-dropdown" ref={dropdownRef}>
-            <button className="profile-btn" onClick={() => setShowDropdown(!showDropdown)}>
-              <FiUser className="icon" />
-              <span>{user.name || "Admin"}</span>
-            </button>
-            {showDropdown && (
-              <div className="dropdown-menu">
-                <Link to="/admin/dashboard" className="dropdown-item">
-                  <FiBarChart2 className="dropdown-icon" />
-                  <span>Dashboard</span>
-                </Link>
-                <Link to="/admin/profile" className="dropdown-item">
-                  <FiSettings className="dropdown-icon" />
-                  <span>Ayarlar</span>
-                </Link>
-                <button onClick={logout} className="dropdown-item logout-btn">
-                  <FiLogOut className="dropdown-icon" />
-                  <span>Çıkış</span>
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </header>
     );
@@ -184,7 +185,7 @@ const Header = () => {
               <span>Favoriler</span>
             </Link>
             
-            <Link to="/orders" className="nav-link">
+            <Link to="/profile/orders" className="nav-link">
               <FiPackage className="icon" />
               <span>Siparişler</span>
             </Link>

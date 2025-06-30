@@ -3,7 +3,6 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "../components/cart/CartPage.css";
-import Footer from "../components/Footer/Footer";
 
 // Yeni bileşenler
 import CartItemList from "../components/cart/CartItemList";
@@ -125,13 +124,12 @@ const CartPage = () => {
             Alışverişe Devam Et
           </button>
         </div>
-        <Footer />
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="page-wrapper">
       <div className="cart-container">
         <div className="cart-columns">
           {/* Sol Sütun: Ürün Listesi */}
@@ -170,7 +168,6 @@ const CartPage = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

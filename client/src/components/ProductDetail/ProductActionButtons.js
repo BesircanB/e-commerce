@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useProductModels } from "../../context/ProductModelContext";
+import { useAuth } from "../../context/AuthContext";
 import "./ProductActionButtons.css";
 
 const ProductActionButtons = ({ product }) => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { models, colors, getModels, getColors, loading } = useProductModels();
+  const { user } = useAuth();
 
   const [selectedModelId, setSelectedModelId] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -45,13 +47,15 @@ const ProductActionButtons = ({ product }) => {
 
   return (
     <div className="product-action-buttons">
-      <button
-        className={`fav-btn ${isInWishlist(product.id) ? "active" : ""}`}
-        onClick={handleWishlistToggle}
-        title={isInWishlist(product.id) ? "Favorilerden çıkar" : "Favorilere ekle"}
-      >
-        {isInWishlist(product.id) ? "❤️" : "🤍"}
-      </button>
+      {user && (
+        <button
+          className={`fav-btn ${isInWishlist(product.id) ? "active" : ""}`}
+          onClick={handleWishlistToggle}
+          title={isInWishlist(product.id) ? "Favorilerden çıkar" : "Favorilere ekle"}
+        >
+          {isInWishlist(product.id) ? "❤️" : "🤍"}
+        </button>
+      )}
       <div className="variant-selectors">
         <select
           className="variant-dropdown"

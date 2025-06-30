@@ -134,13 +134,23 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
+  // Google login sonrası user ve token'ı doğrudan setle
+  const setAuthFromGoogle = (user, token) => {
+    setUser(user);
+    setToken(token);
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", token);
+    axios.clearSessionId();
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user, token, loading, error,
         login, register, googleLogin,
         forgotPassword, resetPassword,
-        logout, updateUser
+        logout, updateUser,
+        setAuthFromGoogle
       }}
     >
       {children}

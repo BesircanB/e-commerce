@@ -15,12 +15,12 @@ const AdminOrderCard = ({ order }) => {
     <div className="admin-order-card-modern">
       <div className="admin-order-card-header">
         <h4>
-          <span className="admin-order-id">Sipariş #{order.id}</span> – <span className="admin-order-user">{order.user?.name || "Kullanıcı Yok"}</span>
+          <span className="admin-order-id">Sipariş #{order.id}</span> – <span className="admin-order-user">{order.users?.name || "Kullanıcı Yok"}</span>
         </h4>
         <span className={`admin-order-status status-${order.status}`}>{order.status}</span>
       </div>
       <div className="admin-order-card-info">
-        <span><strong>Tutar:</strong> {typeof order.total_amount === "number" ? order.total_amount.toFixed(2) : "-"} ₺</span>
+        <span><strong>Tutar:</strong> {typeof (order.final_total ?? order.total) === "number" ? (order.final_total ?? order.total).toFixed(2) : "-"} ₺</span>
         <span><strong>Tarih:</strong> {order.created_at ? new Date(order.created_at).toLocaleString("tr-TR") : "-"}</span>
       </div>
       <div className="admin-order-card-actions">

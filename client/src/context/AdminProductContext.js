@@ -84,6 +84,21 @@ export const AdminProductProvider = ({ children }) => {
     }
   };
 
+  // Canlı admin ürün arama
+  const searchAdminProducts = async (q) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get("/admin/products/search", { params: { q } });
+      setProducts(res.data);
+    } catch (err) {
+      setError("Arama başarısız");
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -99,6 +114,7 @@ export const AdminProductProvider = ({ children }) => {
         updateProduct,
         deleteProduct,
         toggleVisibility,
+        searchAdminProducts,
       }}
     >
       {children}

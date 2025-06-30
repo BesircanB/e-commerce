@@ -10,10 +10,10 @@ const AdminTopProducts = ({ topSellers, topWished, loading }) => (
       ) : (
         <ul className="admin-top-products-list">
           {topSellers?.map((p, i) => (
-            <li key={p.id || i}>
+            <li key={p.product?.id || i}>
               <span className="admin-top-product-rank">{i + 1}.</span>
-              <span className="admin-top-product-name">{p.name}</span>
-              <span className="admin-top-product-value">{p.totalSold?.toLocaleString?.() ?? "-"} satış</span>
+              <span className="admin-top-product-name">{p.product?.name}</span>
+              <span className="admin-top-product-value">{p.total_sold?.toLocaleString?.() ?? "-"} satış</span>
             </li>
           ))}
         </ul>
@@ -26,10 +26,10 @@ const AdminTopProducts = ({ topSellers, topWished, loading }) => (
       ) : (
         <ul className="admin-top-products-list">
           {topWished?.map((p, i) => (
-            <li key={p.id || i}>
+            <li key={p.product?.id || i}>
               <span className="admin-top-product-rank">{i + 1}.</span>
-              <span className="admin-top-product-name">{p.name}</span>
-              <span className="admin-top-product-value">{p.totalWished?.toLocaleString?.() ?? "-"} istek</span>
+              <span className="admin-top-product-name">{p.product?.name}</span>
+              <span className="admin-top-product-value">{p.total_wished?.toLocaleString?.() ?? "-"} istek</span>
             </li>
           ))}
         </ul>

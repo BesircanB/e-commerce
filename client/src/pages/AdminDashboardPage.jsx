@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { AdminStatsProvider, useAdminStats } from "../context/AdminStatsContext";
-import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminMetricsCards from "../components/admin/AdminMetricsCards";
 import AdminRevenueChart from "../components/admin/AdminRevenueChart";
 import AdminTopProducts from "../components/admin/AdminTopProducts";
@@ -33,10 +32,7 @@ const DashboardContent = () => {
 
 const AdminDashboardPage = () => (
   <AdminStatsProvider>
-    <div className="admin-dashboard-container">
-      <AdminSidebar />
-      <DashboardContent />
-    </div>
+    <DashboardContent />
     <Footer />
   </AdminStatsProvider>
 );

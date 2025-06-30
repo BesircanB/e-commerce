@@ -5,7 +5,7 @@ import axios from "../services/axiosInstance";
 
 const GoogleLoginButton = () => {
   const buttonRef = useRef(null);
-  const { login } = useAuth();
+  const { setAuthFromGoogle } = useAuth();
 
   useEffect(() => {
     if (!window.google || !buttonRef.current) return;
@@ -30,10 +30,8 @@ const GoogleLoginButton = () => {
       console.log("Google user decoded:", decoded);
 
       const res = await axios.post("/auth/google-login", { credential });
-
       const { token, user } = res.data;
-      login({ userData: user, token });
-
+      setAuthFromGoogle(user, token);
       alert("Google ile giriş başarılı");
     } catch (err) {
       console.error("Google login hatası:", err);

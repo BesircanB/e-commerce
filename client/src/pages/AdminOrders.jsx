@@ -10,20 +10,15 @@ const AdminOrders = () => {
 
   return (
     <>
-      <div className="admin-dashboard-container">
-        <main className="admin-dashboard-main">
-          <h2>Admin Siparişler</h2>
-          <button onClick={refetch} style={buttonStyle}>🔄 Yenile</button>
-
-          {orders.length === 0 ? (
-            <p>Hiç sipariş bulunamadı.</p>
-          ) : (
-            orders.map((order) => (
-              <AdminOrderCard key={order.id} order={order} />
-            ))
-          )}
-        </main>
-      </div>
+      <h2>Admin Siparişler</h2>
+      <button onClick={refetch} style={buttonStyle}>🔄 Yenile</button>
+      {orders.length === 0 ? (
+        <p>Hiç sipariş bulunamadı.</p>
+      ) : (
+        orders.map((order) => (
+          <AdminOrderCard key={order.id} order={order} />
+        ))
+      )}
       <Footer />
     </>
   );

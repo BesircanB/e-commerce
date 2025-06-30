@@ -2,7 +2,7 @@ import React from "react";
 import { useCategories } from "../../context/CategoryContext";
 import "./ProductInfoCard.css";
 
-const ProductInfoCard = ({ product, hasPurchased }) => {
+const ProductInfoCard = ({ product, hasPurchased, selectedVariant }) => {
   const { categories } = useCategories();
   const category = categories.find((c) => c.id === product.category_id);
   const categoryName = category ? category.name : "—";
@@ -14,9 +14,11 @@ const ProductInfoCard = ({ product, hasPurchased }) => {
       <div className="product-info-desc">{product.description || "Ürün açıklaması mevcut değil."}</div>
       <div className="product-info-price-row">
         <span className="product-info-price">{product.price.toFixed(2)} ₺</span>
-        <span className={`product-info-stock ${product.stock <= 0 ? "out" : "in"}`}>
-          {product.stock <= 0 ? "Tükendi" : `Stok: ${product.stock}`}
-        </span>
+        {selectedVariant && (
+          <span className={`product-info-stock ${selectedVariant.stock <= 0 ? "out" : "in"}`}>
+            {selectedVariant.stock <= 0 ? "Tükendi" : `Stok: ${selectedVariant.stock}`}
+          </span>
+        )}
       </div>
       {hasPurchased && (
         <div className="product-info-purchased">Bu ürünü daha önce satın aldınız.</div>

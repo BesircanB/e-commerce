@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import axios from "../../services/axiosInstance";
+import ProductCard from "../ProductCard/ProductCard";
 import "./SimilarProductsSection.css";
 
 const SimilarProductsSection = ({ product }) => {
@@ -27,15 +27,7 @@ const SimilarProductsSection = ({ product }) => {
       <h3 className="similar-products-title">Benzer Ürünler</h3>
       <div className="similar-products-grid">
         {similar.slice(0, 6).map((item) => (
-          <Link to={`/product/${item.id}`} className="similar-product-card" key={item.id}>
-            <div className="similar-product-img">
-              <img src={item.image_url} alt={item.name} />
-            </div>
-            <div className="similar-product-info">
-              <div className="similar-product-name">{item.name}</div>
-              <div className="similar-product-price">{item.price} ₺</div>
-            </div>
-          </Link>
+          <ProductCard key={item.id} product={item} />
         ))}
       </div>
     </section>

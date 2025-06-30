@@ -46,7 +46,7 @@ const HomePage = () => {
           });
         });
       }
-      setAllCampaigns(campaignsArr);
+      setAllCampaigns(campaignsArr.slice(0, 3));
     };
     fetchAll();
     // eslint-disable-next-line

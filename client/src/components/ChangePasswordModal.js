@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../services/axiosInstance";
+import { useUserProfile } from "../context/UserProfileContext";
 
 const ChangePasswordModal = () => {
   const navigate = useNavigate();
+  const { updatePassword } = useUserProfile();
   const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -14,38 +15,29 @@ const ChangePasswordModal = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    setError(""); // Hata varsa sil
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const { currentPassword, newPassword, confirmPassword } = form;
-
     if (newPassword !== confirmPassword) {
       setError("Yeni şifreler eşleşmiyor");
       return;
     }
-
-    try {
-      await axios.put("/users/change-password", {
-        oldPassword: currentPassword,
-        newPassword,
-      });
-
+    const result = await updatePassword({ oldPassword: currentPassword, newPassword });
+    if (result.success) {
       alert("Şifre başarıyla güncellendi");
-      navigate("/profile");
-    } catch (err) {
-      console.error("Şifre güncelleme hatası:", err);
-      const msg = err.response?.data?.error || "Bir hata oluştu";
-      setError(msg);
+      navigate(-1);
+    } else {
+      setError(result.message || "Bir hata oluştu");
     }
   };
 
   return (
     <div className="change-password-modal-wrapper">
       <div className="change-password-modal-card">
-        <button className="modal-close" onClick={() => navigate("/profile")}>×</button>
+        <button className="modal-close" onClick={() => navigate(-1)}>×</button>
         <h2 className="change-password-title">Şifre Değiştir</h2>
         <form className="change-password-form" onSubmit={handleSubmit}>
           <div className="change-password-form-row">

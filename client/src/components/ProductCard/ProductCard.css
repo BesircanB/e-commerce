@@ -272,3 +272,38 @@
     gap: 0.3rem;
   }
 }
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+}
+
+.star-icon {
+  font-size: 14px;
+}
+
+.star-icon.filled {
+  color: #ffc107;
+}
+
+.star-icon.half {
+  color: #ffc107;
+}
+
+.star-icon.empty {
+  color: #e0e0e0;
+}
+
+.review-count {
+  color: #666;
+  font-size: 0.9rem;
+  margin-left: 4px;
+}

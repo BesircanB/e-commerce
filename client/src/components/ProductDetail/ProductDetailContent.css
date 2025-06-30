@@ -18,8 +18,10 @@
 .product-detail-image-area {
   flex: 0 0 320px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1rem;
 }
 
 .product-detail-image {
@@ -55,6 +57,39 @@
   padding: 2rem 1.5rem;
 }
 
+.product-detail-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.5rem;
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+}
+
+.star-icon {
+  font-size: 18px;
+}
+
+.star-icon.filled {
+  color: #ffc107;
+}
+
+.star-icon.half {
+  color: #ffc107;
+}
+
+.star-icon.empty {
+  color: #e0e0e0;
+}
+
+.review-count {
+  color: #666;
+  font-size: 0.95rem;
+}
+
 @media (max-width: 900px) {
   .product-detail-card {
     flex-direction: column;
@@ -69,5 +104,9 @@
     width: 100%;
     height: 220px;
     max-width: 100%;
+  }
+  .product-detail-rating {
+    margin-top: 0.8rem;
+    justify-content: center;
   }
 } 

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 
 // Header
 import Header from "./components/Header/Header";
@@ -17,7 +17,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
 import AdminPage from "./pages/AdminPage";
-import MyReviewsPage from "./components/MyReviews/MyReviewsPage";
+import ReviewsPage from "./pages/ReviewsPage";
 import AdminCampaigns from "./pages/AdminCampaigns";
 import CategoryPage from "./pages/CategoryPage";
 import AdminOrders from "./pages/AdminOrders";
@@ -26,6 +26,8 @@ import AdminCategories from "./pages/AdminCategories";
 import CampaignsByCategory from "./pages/CampaignsByCategory";
 import CampaignsByTag from "./pages/CampaignsByTag";
 import KargoBedavaPage from "./pages/KargoBedavaPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
+import AdminProfilePage from "./pages/AdminProfilePage";
 
 // Modal
 import ChangePasswordModal from "./components/ChangePasswordModal";
@@ -58,6 +60,59 @@ import AdminRoute from "./routes/AdminRoute";
 // Stil
 import "./App.css";
 
+import AdminLayout from "./components/admin/AdminLayout";
+
+function AppRoutes() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  return (
+    <>
+      {!isAdminRoute && <Header />}
+      <Routes>
+        {/* Genel Sayfalar */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/product/:id" element={<ProductDetailProvider><ProductDetailPage /></ProductDetailProvider>} />
+        <Route path="/category/:id" element={<CategoryPage />} />
+        <Route path="/campaigns/category/:categoryId" element={<CampaignsByCategory />} />
+        <Route path="/campaigns/tag/:tagId" element={<CampaignsByTag />} />
+        <Route path="/kargo-bedava" element={<KargoBedavaPage />} />
+
+        {/* Giriş Gerektiren Sayfalar */}
+        <Route path="/profile/*" element={
+          <PrivateRoute>
+            <UserReviewProvider>
+              <OrderProvider>
+                <ProfilePage />
+              </OrderProvider>
+            </UserReviewProvider>
+          </PrivateRoute>
+        } />
+        <Route path="/checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
+        <Route path="/orders/:orderId" element={<PrivateRoute><OrderDetailPage /></PrivateRoute>} />
+        <Route path="/wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
+        <Route path="/change-password" element={<PrivateRoute><ChangePasswordModal /></PrivateRoute>} />
+
+        {/* Admin Panel - Nested Layout */}
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route index element={<AdminUIProvider><AdminProductProvider><AdminFilterProvider><AdminPage /></AdminFilterProvider></AdminProductProvider></AdminUIProvider>} />
+          <Route path="campaigns" element={<CampaignProvider><AdminCampaigns /></CampaignProvider>} />
+          <Route path="orders" element={<AdminOrdersProvider><AdminOrders /></AdminOrdersProvider>} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="profile" element={<AdminProfilePage />} />
+        </Route>
+        {/* Admin Şifre Değiştir Modal Route'u (sidebar olmadan, header ile) */}
+        <Route path="/admin/change-password" element={<AdminRoute><ChangePasswordModal /></AdminRoute>} />
+      </Routes>
+    </>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -72,90 +127,7 @@ function App() {
                       <ProductProvider>
                         <ReviewProvider>
                           <Router>
-                            <Header />
-                            <Routes>
-                              {/* Genel Sayfalar */}
-                              <Route path="/" element={<HomePage />} />
-                              <Route path="/login" element={<LoginPage />} />
-                              <Route path="/register" element={<RegisterPage />} />
-                              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                              <Route path="/reset-password" element={<ResetPasswordPage />} />
-                              <Route path="/cart" element={<CartPage />} />
-                              <Route path="/product/:id" element={<ProductDetailProvider><ProductDetailPage /></ProductDetailProvider>} />
-                              <Route path="/category/:id" element={<CategoryPage />} />
-                              <Route path="/campaigns/category/:categoryId" element={<CampaignsByCategory />} />
-                              <Route path="/campaigns/tag/:tagId" element={<CampaignsByTag />} />
-                              <Route path="/kargo-bedava" element={<KargoBedavaPage />} />
-
-                              {/* Giriş Gerektiren Sayfalar */}
-                              <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-                              <Route
-                                path="/profile/my-reviews"
-                                element={
-                                  <PrivateRoute>
-                                    <UserReviewProvider>
-                                      <MyReviewsPage />
-                                    </UserReviewProvider>
-                                  </PrivateRoute>
-                                }
-                              />
-                              <Route path="/checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
-                              <Route path="/orders" element={<PrivateRoute><OrdersPage /></PrivateRoute>} />
-                              <Route path="/wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
-                              <Route path="/change-password" element={<PrivateRoute><ChangePasswordModal /></PrivateRoute>} />
-
-                              {/* Admin Panel */}
-                              <Route
-                                path="/admin"
-                                element={
-                                  <AdminRoute>
-                                    <AdminUIProvider>
-                                      <AdminProductProvider>
-                                        <AdminFilterProvider>
-                                          <AdminPage />
-                                        </AdminFilterProvider>
-                                      </AdminProductProvider>
-                                    </AdminUIProvider>
-                                  </AdminRoute>
-                                }
-                              />
-                              <Route
-                                path="/admin/campaigns"
-                                element={
-                                  <AdminRoute>
-                                    <CampaignProvider>
-                                      <AdminCampaigns />
-                                    </CampaignProvider>
-                                  </AdminRoute>
-                                }
-                              />
-                              <Route
-                                path="/admin/orders"
-                                element={
-                                  <AdminRoute>
-                                    <AdminOrdersProvider>
-                                      <AdminOrders />
-                                    </AdminOrdersProvider>
-                                  </AdminRoute>
-                                }
-                              />
-                              <Route
-                                path="/admin/dashboard"
-                                element={
-                                  <AdminRoute>
-                                    <AdminDashboardPage />
-                                  </AdminRoute>
-                                }
-                              />
-                              <Route
-                                path="/admin/categories"
-                                element={
-                                  <AdminRoute>
-                                    <AdminCategories />
-                                  </AdminRoute>
-                                }
-                              />
-                            </Routes>
+                            <AppRoutes />
                           </Router>
                         </ReviewProvider>
                       </ProductProvider>

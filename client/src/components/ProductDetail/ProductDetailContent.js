@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useProductDetail } from "../../context/ProductDetailContext";
 import ProductImageModal from "./ProductImageModal";
 import ProductInfoCard from "./ProductInfoCard";
 import ProductActionButtons from "./ProductActionButtons";
 import ProductReviews from "../ProductReviews/ProductReviews";
 import SimilarProductsSection from "./SimilarProductsSection";
+import { FaStar, FaStarHalf, FaRegStar } from "react-icons/fa";
 import "./ProductDetailContent.css";
 
 const ProductDetailContent = () => {
@@ -14,7 +15,32 @@ const ProductDetailContent = () => {
     isImageModalOpen,
     setImageModalOpen,
     hasPurchased,
+    selectedModel,
+    selectedColor,
   } = useProductDetail();
+
+  // Generate star rating display
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars.push(<FaStar key={i} className="star-icon filled" />);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(<FaStarHalf key={i} className="star-icon half" />);
+      } else {
+        stars.push(<FaRegStar key={i} className="star-icon empty" />);
+      }
+    }
+    return stars;
+  };
+
+  // Find selected variant
+  const selectedVariant = product?.variants?.find(
+    v => v.model === selectedModel && v.color === selectedColor
+  );
 
   if (loading) {
     return <div className="product-detail-loading">Yükleniyor...</div>;
@@ -34,9 +60,21 @@ const ProductDetailContent = () => {
             className="product-detail-image"
             onClick={() => setImageModalOpen(true)}
           />
+          <div className="product-detail-rating">
+            <div className="stars">
+              {renderStars(product.average_rating || 0)}
+            </div>
+            <span className="review-count">
+              ({product.review_count || 0} yorum)
+            </span>
+          </div>
         </div>
         <div className="product-detail-info-area">
-          <ProductInfoCard product={product} hasPurchased={hasPurchased} />
+          <ProductInfoCard 
+            product={product} 
+            hasPurchased={hasPurchased} 
+            selectedVariant={selectedVariant}
+          />
           <ProductActionButtons product={product} />
         </div>
       </div>
@@ -45,7 +83,7 @@ const ProductDetailContent = () => {
       <div className="product-detail-reviews-area">
         <ProductReviews
           productId={product.id}
-          averageRating={product.averageRating || 0}
+          averageRating={product.average_rating || 0}
         />
       </div>
     </div>

@@ -13,7 +13,20 @@ export const CategoryProvider = ({ children }) => {
   const getCategories = async () => {
     try {
       const res = await axios.get("/categories");
-      setCategories(res.data || []);
+      const categoryImages = {
+        "Bilgisayar": "/category-images/Bilgisayar.png",
+        "charger": "/category-images/charger.png",
+        "giyilebilir": "/category-images/giyilebilir.png",
+        "headphones": "/category-images/headphones.png",
+        "kılıf": "/category-images/kılıf.png",
+        "tablet": "/category-images/tablet.png",
+        "telefon": "/category-images/telefon.png",
+      };
+      const categoriesWithImages = (res.data || []).map(cat => ({
+        ...cat,
+        image: cat.image || categoryImages[cat.name] || null
+      }));
+      setCategories(categoriesWithImages);
     } catch (err) {
       console.error("Kategoriler alınamadı:", err);
     }
